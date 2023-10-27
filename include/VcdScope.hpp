@@ -5,20 +5,16 @@
 #include <string>
 
 class VcdScope {
-  public:
-    enum Type {
-      MODULE
-    };
-  protected:
+   public:
+    enum Type { MODULE };
+
+   protected:
     std::string name;
     Type type;
     VcdScope* parent;
     std::list<VcdScope*> children;
 
-  public:
-    // VcdModule(VcdModule* parent) : parent(parent) {}
-
-  friend class Parser;
+    friend class Parser;
 };
 
 #endif

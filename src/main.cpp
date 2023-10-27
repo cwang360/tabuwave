@@ -37,14 +37,8 @@ int main(int argc, char **argv) {
         return 1;
     }
     
-    Parser::parse(waveform_file);
-
-
-    // case '#':  // time value
-    //     curr_time = stoi(token.substr(1, token.size()));
-    //     break;
-    // default:  // data
-    //     break;
+    Parser parser(waveform_file);
+    parser.parse();
 
     return 0;
 }

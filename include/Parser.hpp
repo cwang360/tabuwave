@@ -2,9 +2,13 @@
 #define __PARSER_H
 
 #include <string>
+#include <map>
+
+#include "VcdScope.hpp"
+#include "VcdVar.hpp"
 
 class Parser {
-  public:
+   private:
     enum State {
         PARSE_NONE,
         PARSE_VERSION,
@@ -18,12 +22,19 @@ class Parser {
         PARSE_ERR
     };
 
-    static void parse(std::string file_name);
+    std::string filename;
+    VcdScope* top_scope;
+    State curr_state;
+    std::map<std::string, VcdVar*> var_map;
+    std::list<VcdScope*> scopes;
 
-  private:
-    static inline State getParseState(std::string token);
+    inline State getParseState(std::string token);
+
+   public:
+    Parser(std::string filename)
+        : filename(filename), top_scope(nullptr), curr_state(PARSE_NONE){};
+    ~Parser();
+    void parse();
 };
-
-
 
 #endif
