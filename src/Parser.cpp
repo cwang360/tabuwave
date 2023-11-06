@@ -8,11 +8,17 @@
 #include <sstream>
 #include <thread>
 
+#if USE_OMP
+#include <omp.h>
+#endif
+
 void Parser::parse() {
     // Determine the number of threads that can run concurrently
-    std::list<std::thread> threads;
     uint64_t numThreads = std::thread::hardware_concurrency();
     std::cout << "Your computer supports " << numThreads << " concurrent threads.\n";
+#ifdef USE_OMP
+    std::cout << "Using OpenMP.\n";
+#endif
 
     std::ifstream infile(filename);
     std::string line;
@@ -113,74 +119,62 @@ void Parser::parse() {
     endMeasureTime("Parse Time");
     
     startMeasureTime();
+
+#ifdef USE_OMP
+    constructValueIntervals();
+#else
+    std::list<std::thread> threads;
     uint64_t numVars = var_hashes.size();
     uint64_t varsPerThread = ceil((numVars) / (double) (numThreads - 1)); // for first n-2 threads
     uint64_t i = 1;
     // Create the threads (max n-1) and distribute responsibility among the threads
     for (; (i < numThreads - 1) && (i < numVars); i++) 
     {
-        threads.emplace_back(std::thread([this, start = (i - 1) * varsPerThread, end = (i * varsPerThread)]() {this->constructValueIntervals(start, end);}));
+        threads.emplace_back(
+            std::thread(
+                [this, start = (i - 1) * varsPerThread, end = (i * varsPerThread)]() 
+                {
+                    this->constructValueIntervals(start, end);
+                }
+            )
+        );
     }
-    threads.emplace_back(std::thread([this, start = (i - 1) * varsPerThread, end = numVars]() {this->constructValueIntervals(start, end);}));
+    threads.emplace_back(
+        std::thread(
+            [this, start = (i - 1) * varsPerThread, end = numVars]() 
+            {
+                this->constructValueIntervals(start, end);
+            }
+        )
+    );
 
     // wait for threads to finish
     for (auto& thread : threads) 
     {
         thread.join();
     }
-    std::cout << numVars << "\n" << varsPerThread << std::endl;
-
+#endif
     endMeasureTime("Value Interval Processing Time");
-    // for (auto const& x : var_map) {
-    //     VcdVar* var = x.second;
-    //     auto it = var->vcd_values.begin();
-    //     uint64_t prev_timestamp = it->first;
-    //     std::string prev_value = it->second;
-    //     ++it;
-    //     for (; it != var->vcd_values.end(); ++it) {
-    //         var->interval_values +=
-    //             std::make_pair(boost::icl::interval<uint64_t>::right_open(
-    //                                prev_timestamp, it->first),
-    //                            prev_value);
-    //         prev_timestamp = it->first;
-    //         prev_value = it->second;
-    //     }
-    //     var->interval_values +=
-    //         std::make_pair(boost::icl::interval<uint64_t>::right_open(
-    //                            prev_timestamp, curr_time),
-    //                        prev_value);
-    // }
-    
-    std::cout << "Version: " << version << std::endl
-              << "Date: " << date << std::endl
-              << "Timescale: " << timescale << std::endl;
 
-    std::cout << "Top scope: " << top_scope->name << std::endl;
-    // for (auto child : top_scope->children) {
-    //     std::cout << child.first;
-    //     if (child.first == "clk") {
-    //         std::cout << ((VcdVar*)child.second)->hash << std::endl;
-    //         std::cout << child.second << std::endl;
-    //         std::cout << var_map["{("] << std::endl;
-    //         // for (auto x : ((VcdVar*) child)->vcd_values) {
-    //         //     std::cout << x.first << std::endl;
-    //         // }
-    //         // for (auto x : var_map["{("]->vcd_values) {
-    //         //     std::cout << x.first << ' ' << x.second << std::endl;
-    //         // }
-    //         auto it = ((VcdVar*)child.second)->interval_values.begin();
-    //         while (it != ((VcdVar*)child.second)->interval_values.end()) {
-    //             auto time = it->first;
-    //             std::string value = (*it++).second;
-    //             std::cout << time << ": " << value << std::endl;
-    //         }
-    //         std::cout << ((VcdVar*)child.second)->interval_values(399997) << std::endl;
-    //     }
-    // }
+    std::cout << std::endl
+              << "Version: " << version << std::endl
+              << "Date: " << date << std::endl
+              << "Timescale: " << timescale << std::endl
+              << "Top scope: " << top_scope->name << std::endl;
+
 }
 
+#ifdef USE_OMP
+void Parser::constructValueIntervals() {
+    constructValueIntervals(0, var_hashes.size());
+}
+#endif
+
 void Parser::constructValueIntervals(uint64_t startIdx, uint64_t endIdx) {
-    for (unsigned int i = startIdx; i < endIdx; i++) {
+#ifdef USE_OMP
+#pragma omp parallel for
+#endif
+    for (uint64_t i = startIdx; i < endIdx; i++) {
         std::string hash = var_hashes[i];
         VcdVar* var = var_map[hash];
         auto it = var->vcd_values.begin();
@@ -189,16 +183,20 @@ void Parser::constructValueIntervals(uint64_t startIdx, uint64_t endIdx) {
         ++it;
         for (; it != var->vcd_values.end(); ++it) {
             var->interval_values +=
-                std::make_pair(boost::icl::interval<uint64_t>::right_open(
-                                   prev_timestamp, it->first),
-                               prev_value);
+                std::make_pair(
+                    boost::icl::interval<uint64_t>::right_open(
+                        prev_timestamp, it->first
+                    ),
+                    prev_value);
             prev_timestamp = it->first;
             prev_value = it->second;
         }
         var->interval_values +=
-            std::make_pair(boost::icl::interval<uint64_t>::right_open(
-                               prev_timestamp, curr_time),
-                           prev_value);
+            std::make_pair(
+                boost::icl::interval<uint64_t>::right_open(
+                    prev_timestamp, curr_time
+                ),       
+                prev_value);
     }
 }
 

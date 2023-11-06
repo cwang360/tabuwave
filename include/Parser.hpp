@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <chrono>
 
 #include "VcdScope.hpp"
 #include "VcdVar.hpp"
@@ -29,10 +30,13 @@ class Parser {
     std::vector<std::string> var_hashes;
     std::map<std::string, VcdVar*> var_map;
     std::list<VcdScope*> scopes;
-    std::chrono::steady_clock::time_point startTime;
+    std::chrono::high_resolution_clock::time_point startTime;
 
     inline State getParseState(std::string token);
     void constructValueIntervals(uint64_t startIdx, uint64_t endIdx);
+#ifdef USE_OMP
+    void constructValueIntervals();
+#endif
     void startMeasureTime();
     void endMeasureTime(std::string desc);
 

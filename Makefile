@@ -1,8 +1,9 @@
 CFLAGS = -g -MMD -Wall -pedantic -Werror -std=c11 -I$(INC_DIR)
 CXXFLAGS = -g -MMD -Wall -pedantic -Werror -std=c++2a -I$(INC_DIR) -I$(BOOST_DIR)
 LIBS = -lm
+
 CC = gcc
-CXX = g++
+CXX = g++-13
 
 SRC_DIR = src
 OBJ_DIR = obj
@@ -32,6 +33,13 @@ endif
 ifdef FAST
 CFLAGS += -O2
 CXXFLAGS += -O2
+endif
+
+ifdef USE_OMP
+CFLAGS += -DUSE_OMP
+CXXFLAGS += -DUSE_OMP
+CXXFLAGS += -fopenmp
+LIBS += -L/usr/local/lib/ -lomp
 endif
 
 .PHONY: all clean
