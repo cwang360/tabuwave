@@ -125,28 +125,23 @@ void Parser::parse() {
 #else
     std::list<std::thread> threads;
     uint64_t numVars = var_hashes.size();
-    uint64_t varsPerThread = ceil((numVars) / (double) (numThreads - 1)); // for first n-2 threads
-    uint64_t i = 1;
+    uint64_t varsPerThread = floor((numVars) / (double) (numThreads - 1)); // min # vars each thread should have
+    uint64_t remainder = numVars % (numThreads - 1);
+    uint64_t i = 0;
     // Create the threads (max n-1) and distribute responsibility among the threads
-    for (; (i < numThreads - 1) && (i < numVars); i++) 
+    while (threads.size() < (numThreads - 1)) 
     {
+        uint64_t end = threads.size() >= remainder ? i + varsPerThread : i + varsPerThread + 1;
         threads.emplace_back(
             std::thread(
-                [this, start = (i - 1) * varsPerThread, end = (i * varsPerThread)]() 
+                [this, start = i, end]() 
                 {
                     this->constructValueIntervals(start, end);
                 }
             )
         );
+        i = end;
     }
-    threads.emplace_back(
-        std::thread(
-            [this, start = (i - 1) * varsPerThread, end = numVars]() 
-            {
-                this->constructValueIntervals(start, end);
-            }
-        )
-    );
 
     // wait for threads to finish
     for (auto& thread : threads) 
@@ -248,7 +243,7 @@ VcdVar* Parser::getVcdVar(std::string hierarchicalName, VcdScope* scope) {
 
 VcdVar* Parser::getVcdVar(std::string hierarchicalName) {
     return getVcdVar(hierarchicalName, top_scope);
-};
+}
 
 void Parser::startMeasureTime() {
     startTime = std::chrono::high_resolution_clock::now();

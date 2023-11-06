@@ -1,9 +1,15 @@
+UNAME := $(shell uname)
+
 CFLAGS = -g -MMD -Wall -pedantic -Werror -std=c11 -I$(INC_DIR)
 CXXFLAGS = -g -MMD -Wall -pedantic -Werror -std=c++2a -I$(INC_DIR) -I$(BOOST_DIR)
 LIBS = -lm
 
 CC = gcc
+ifeq ($(UNAME), Darwin)
 CXX = g++-13
+else
+CXX = g++
+endif
 
 SRC_DIR = src
 OBJ_DIR = obj
@@ -37,9 +43,17 @@ endif
 
 ifdef USE_OMP
 CFLAGS += -DUSE_OMP
-CXXFLAGS += -DUSE_OMP
-CXXFLAGS += -fopenmp
+CXXFLAGS += -DUSE_OMP -fopenmp
+ifeq ($(UNAME), Darwin)
 LIBS += -L/usr/local/lib/ -lomp
+endif
+ifeq ($(UNAME), Linux)
+LIBS += -lgomp
+endif
+else
+ifeq ($(UNAME), Linux)
+LIBS += -lpthread # needed for PACE-ICE
+endif
 endif
 
 .PHONY: all clean

@@ -4,6 +4,8 @@ Tabular waveform viewer. Instead of using the traditional signal-to-time dimensi
 
 # Usage
 
+## General usage
+
 [Install Boost libraries](https://www.boost.org/doc/libs/1_83_0/more/getting_started/index.html) and [change the path to Boost in the Makefile](Makefile#L11) or specify the `BOOST_DIR` when compiling with `make` if needed.
 ```
 make BOOST_DIR=<your boost path>
@@ -20,6 +22,18 @@ Run with (for example):
 ./tabuwave -f vcd/test.vcd 
 ```
 See help text with `-h`
+
+## PACE-ICE instructions
+
+The Makefile has been designed to work on my local machine and PACE-ICE. To compile and run on PACE-ICE:
+```
+module load boost
+
+make            # to use std::thread multithreading
+make USE_OMP=1  # to use OpenMP
+
+./tabuwave -f vcd/test.vcd 
+```
 
 
 # Details
