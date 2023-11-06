@@ -40,6 +40,10 @@ void Parser::parse() {
         while (ss >> token) {
             if (token.at(0) == '$') {
                 curr_state = getParseState(token);
+                if (curr_state == PARSE_UPSCOPE) {
+                    curr_scope = curr_scope->parent;
+                    break;
+                }
             } else {
                 switch (curr_state) {
                     case PARSE_VERSION: {
@@ -60,15 +64,26 @@ void Parser::parse() {
                         scopes.emplace_back(next_scope);
                         ss >> token;
                         next_scope->name = token;
-                        if (!curr_scope)
-                            top_scope = next_scope;
-                        else
+                        if (!curr_scope) // top level
+                        {
+                            if (!top_scope) 
+                            {
+                                top_scope = next_scope;
+                                curr_scope = next_scope;
+                            } 
+                            else 
+                            { // visited before
+                                curr_scope = top_scope;
+                            }
+                            
+                        }   
+                        else if (!curr_scope->children.count(next_scope->name)) // non-top level, haven't visited before
+                        {
                             curr_scope->children[next_scope->name] = next_scope;
-                        curr_scope = next_scope;
-                        break;
-                    }
-                    case PARSE_UPSCOPE: {
-                        curr_scope = curr_scope->parent;
+                            curr_scope = next_scope;
+                        }
+                        else // top level, have visited before
+                            curr_scope = curr_scope->children[next_scope->name];
                         break;
                     }
                     case PARSE_VAR: {

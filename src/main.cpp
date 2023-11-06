@@ -35,9 +35,17 @@ int main(int argc, char **argv) {
     
     Parser parser(waveform_file);
     parser.parse();
-    // VcdVar* iram0 = parser.getVcdVar("mips_tb.mips.fetch.\\iram[0]");
-    // std::cout << iram0->getName() << std::endl;
-    // std::cout << iram0->getValueAt(3) << std::endl;
+    VcdVar* iram0 = parser.getVcdVar("mips_tb.mips.fetch.\\iram[0]");
+    std::cout << iram0->getName() << std::endl;
+    std::cout << iram0->getValueAt(3) << std::endl;
+
+    VcdVar* iram1 = parser.getVcdVar("mips_tb.mips.fetch.\\iram[1]");
+    std::cout << iram1->getName() << std::endl;
+    std::cout << iram1->getValueAt(3) << std::endl;
+
+    VcdVar* iram2 = parser.getVcdVar("mips_tb.mips.fetch.\\iram[2]");
+    std::cout << iram2->getName() << std::endl;
+    std::cout << iram2->getValueAt(3) << std::endl;
 
     return 0;
 }

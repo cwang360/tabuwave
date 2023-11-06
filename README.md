@@ -6,7 +6,7 @@ Tabular waveform viewer. Instead of using the traditional signal-to-time dimensi
 
 ## General usage
 
-[Install Boost libraries](https://www.boost.org/doc/libs/1_83_0/more/getting_started/index.html) and [change the path to Boost in the Makefile](Makefile#L11) or specify the `BOOST_DIR` when compiling with `make` if needed.
+[Install Boost libraries](https://www.boost.org/doc/libs/1_83_0/more/getting_started/index.html) and [change the path to Boost in the Makefile](Makefile#L17) or specify the `BOOST_DIR` when compiling with `make` if needed.
 ```
 make BOOST_DIR=<your boost path>
 ```
@@ -46,5 +46,5 @@ This is a custom project submission for ECE 4122, so below are what fulfill the 
     - `VcdVar` is a derived class of `VcdScope` since both are intended to be part of a tree structure and share many of the same members (parent and children nodes, name, etc.). `VcdVar` has some additional members, such as time-value information. This is parsed from the vcd file and then stored into interval trees to be able to quickly query the value at any time within the simulation. `boost::icl::interval_map` is used for robustness.
 - Multithreading
     - Multithreading is used to efficiently process vcd data for each `VcdVar` into its own interval_map simultaneously.
-    - Both hand-threading with `std::thread` and multithreading using `OpenMP` are implemented and can be switched/selected during compile time. See usage instructions.
+    - Both hand-threading with `std::thread` (distributing work as evenly as possible among the available concurrent threads supported by hardware) and multithreading using `OpenMP` are implemented and can be switched/selected during compile time. See usage instructions.
 
