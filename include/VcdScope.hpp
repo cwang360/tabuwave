@@ -6,13 +6,13 @@
 
 class VcdScope {
    public:
-    enum Type { MODULE };
+    enum Type { MODULE, BEGIN };
 
    protected:
     std::string name;
     Type type;
     VcdScope* parent;
-    std::list<VcdScope*> children;
+    std::map<std::string, VcdScope*> children;
 
     friend class Parser;
 };

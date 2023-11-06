@@ -1,9 +1,5 @@
 #include <unistd.h>
-
-#include <boost/algorithm/string.hpp>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 
 #include "Parser.hpp"
 #include "VcdScope.hpp"
@@ -39,6 +35,9 @@ int main(int argc, char **argv) {
     
     Parser parser(waveform_file);
     parser.parse();
+    VcdVar* iram0 = parser.getVcdVar("mips_tb.mips.fetch.\\iram[0]");
+    std::cout << iram0->getName() << std::endl;
+    std::cout << iram0->getValueAt(3) << std::endl;
 
     return 0;
 }
