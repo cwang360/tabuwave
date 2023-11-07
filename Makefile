@@ -2,7 +2,7 @@ UNAME := $(shell uname)
 
 CFLAGS = -g -MMD -Wall -pedantic -Werror -std=c11 -I$(INC_DIR)
 CXXFLAGS = -g -MMD -Wall -pedantic -Werror -std=c++2a -I$(INC_DIR) -I$(BOOST_DIR)
-LIBS = -lm
+LIBS = -lm -lncurses
 
 CC = gcc
 ifeq ($(UNAME), Darwin)

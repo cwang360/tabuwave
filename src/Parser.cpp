@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
+#include <ncurses.h>
 
 #if USE_OMP
 #include <omp.h>
@@ -166,11 +167,17 @@ void Parser::parse() {
 #endif
     endMeasureTime("Value Interval Processing Time");
 
-    std::cout << std::endl
-              << "Version: " << version << std::endl
-              << "Date: " << date << std::endl
-              << "Timescale: " << timescale << std::endl
-              << "Top scope: " << top_scope->name << std::endl;
+    printw(
+        "\n\r"
+        "Version:   %s\n\r"
+        "Date:      %s\n\r"
+        "Timescale: %s\n\r"
+        "Top scope: %s\n\r",
+        version.c_str(),
+        date.c_str(),
+        timescale.c_str(),
+        top_scope->name.c_str()
+    );
 
 }
 
@@ -266,5 +273,5 @@ void Parser::startMeasureTime() {
 
 void Parser::endMeasureTime(std::string desc) {
     auto elapsed = std::chrono::high_resolution_clock::now() - startTime;
-    std::cout << desc << ": " << std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() << " us" << std::endl;
+    printw("%s: %llu us\n\r", desc.c_str(), std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count());
 }

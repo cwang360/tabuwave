@@ -2,17 +2,17 @@
 #include <iostream>
 #include <regex>
 #include <iomanip>
-
+#include <ncurses.h>
 
 #include "Parser.hpp"
 #include "VcdScope.hpp"
 
-#define BOLD "\033[1m"
-#define PLAIN "\033[0m"
-#define BLUE "\033[34m"
-#define HIGHLIGHT "\033[42;97m"
-#define ERROR "\033[41;97m"
-#define INFO "\033[43;97m"
+#define COLOR_INFO 1
+#define COLOR_BOLD 2
+#define COLOR_ERROR 3
+#define DISPLAY_INFO COLOR_PAIR(COLOR_INFO) | A_STANDOUT
+#define DISPLAY_BOLD COLOR_PAIR(COLOR_BOLD) | A_BOLD
+#define DISPLAY_ERROR COLOR_PAIR(COLOR_ERROR) | A_BOLD
 
 void print_help() {
     std::cout << "tabuwave [OPTIONS]\n";
@@ -20,54 +20,45 @@ void print_help() {
     std::cout << "  -f F\t\tPath to waveform file\n";
 }
 
-
-void clear()
-{
-#if defined _WIN32
-    system("cls");
-#elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__)
-    system("clear");
-    //std::cout<< u8"\033[2J\033[1;1H"; //Using ANSI Escape Sequences 
-#elif defined (__APPLE__)
-    system("clear");
-#endif
-}
-
 void print_table(std::list<VcdVar*> vars, uint64_t timestamp, bool lined, uint64_t highlight_idx) {
     std::list<std::string> values;
     std::vector<size_t> colWidths;
     size_t totalWidth = 8;
-    std::cout << BOLD << BLUE << "t = " << timestamp << "\n\n index " << PLAIN "|";
+    attron(DISPLAY_BOLD);
+    printw("t = %llu\n\n\r", timestamp);
+    printw(" index |");
     for (auto& var : vars) {
         values.push_back(var->getValueAt(timestamp));
         colWidths.push_back(var->getName().size() + 1);
         totalWidth += var->getName().size() + 3;
-        std::cout << BOLD << BLUE << " " << var->getName() << " " << PLAIN << "|";
+        printw(" %s |", var->getName().c_str());
     }
-    if (lined) std::cout << std::endl << std::string(totalWidth, '=');
-    std::cout << std::endl;
+    if (lined) printw("\n\r%s", std::string(totalWidth, '=').c_str());
+    printw("\n\r");
     for (size_t i = 0; i < vars.front()->getSize(); i++) {
         std::string hl = "";
-        if (i == highlight_idx) hl = HIGHLIGHT;
-        std::cout << PLAIN << BOLD << BLUE << hl <<  std::setw(6) << i << PLAIN << hl << " |";
+        attron(DISPLAY_BOLD | A_NORMAL);
+        if (i == highlight_idx) attron(DISPLAY_INFO);
+        printw("% 6d |", i);
         size_t col = 0;
+        attrset(A_NORMAL);
+        if (i == highlight_idx) attron(DISPLAY_INFO);
         for (auto& val : values) {
             if (i < val.size() - 1) {
-                std::cout << PLAIN << hl << std::setw(colWidths.at(col)) << val.at(val.size() - 1 - i) << " |" << PLAIN;
+                printw("% *c |", colWidths.at(col), val.at(val.size() - 1 - i));
             } else {
-                std::cout << PLAIN << hl << std::setw(colWidths.at(col)) << "0" << " |" << PLAIN;
+                printw("% *c |", colWidths.at(col), '0');
             }
             col++;
         }
-        if (lined) std::cout << std::endl << std::string(totalWidth, '-');
-        std::cout << std::endl;
+        
+        if (lined) printw("\n\r%s", std::string(totalWidth, '-').c_str());
+        printw("\n\r");
     }
-    std::cout << BOLD << BLUE << "\nt = " << timestamp << PLAIN << std::endl;
+    attron(DISPLAY_BOLD);
+    printw("t = %llu\n\n\r", timestamp);
 }
-
-int main(int argc, char **argv) {
-    clear();
-
+int main(int argc, char **argv) {  
     // get command line arguments
     int opt;
     std::string waveform_file;
@@ -90,28 +81,37 @@ int main(int argc, char **argv) {
         return 1;
     }
     
+    int c;
+    initscr();    /* Start curses mode */
+    start_color();			/* Start color 			*/
+    raw();
+    // noecho();
+    keypad(stdscr, TRUE);
+
+    init_pair(COLOR_ERROR, COLOR_RED, COLOR_WHITE);
+    init_pair(COLOR_INFO, COLOR_BLUE, COLOR_WHITE);
+    init_pair(COLOR_BOLD, COLOR_GREEN, COLOR_WHITE);
+
+    std::stringstream out;
+
     Parser parser(waveform_file);
     parser.parse();
     
     VcdVar* iram0 = parser.getVcdVar("mips_tb.mips.fetch.pc");
-    std::cout << iram0->getName() << std::endl;
-    std::cout << iram0->getValueAt(3) << std::endl;
     std::string iram0_val = iram0->getValueAt(3);
 
     VcdVar* iram1 = parser.getVcdVar("mips_tb.mips.fetch.next_pc");
-    std::cout << iram1->getName() << std::endl;
-    std::cout << iram1->getValueAt(3) << std::endl;
-        std::string iram1_val = iram1->getValueAt(3);
-
+    std::string iram1_val = iram1->getValueAt(3);
 
     VcdVar* iram2 = parser.getVcdVar("mips_tb.mips.fetch.pc4");
-    std::cout << iram2->getName() << std::endl;
-    std::cout << iram2->getValueAt(3) << std::endl;
-        std::string iram2_val = iram2->getValueAt(3);
+    std::string iram2_val = iram2->getValueAt(3);
 
-    std::cout << INFO << "ENTER to continue\n" << PLAIN;
-    getchar();
-    clear();
+    attron(DISPLAY_INFO);
+    printw("ENTER to continue\n\r");
+	
+    refresh();
+    
+    while(getch() != '\n');
 
     std::list<VcdVar*> vars;
     vars.emplace_back(iram0);
@@ -124,38 +124,55 @@ int main(int argc, char **argv) {
 
     std::regex nonNegIntRegex("^[0-9]+$");
 
-    while(1) {
+    while(1)
+    {
+        
+        c = 0;
         clear();
         print_table(vars, timestamp, lined, highlightIdx);
         if (err) {
-            std::cout << ERROR << "Command not recognized" << PLAIN << std::endl;
+            attron(DISPLAY_ERROR);
+            printw("Command not recognized\n");
             err = false;
         } 
-        std::string line;
-        getline(std::cin, line);
-        
-        if (std::regex_match(line, nonNegIntRegex)) {
-            timestamp = stoull(line);
-        } else if (line.size() > 1 && line.at(0) == '/' && std::regex_match(line.substr(1, line.size()), nonNegIntRegex)) {
-            highlightIdx = stoull(line.substr(1, line.size()));
-        } else if (line.size() == 1 && line.at(0) == 't') {
-            lined = !lined;
-        } else if (line.size() == 1 && line.at(0) == 'p') {
-            highlightIdx--;
-            // TODO: check out of bounds!
-        } else if (line.size() == 1 && line.at(0) == 'n') {
-            highlightIdx++;
-        } else if (line.size() == 1 && line.at(0) == ',') {
-            timestamp--;
-            // TODO: check out of bounds!
-        } else if (line.size() == 1 && line.at(0) == '.') {
-            timestamp++;
-        } else if (line.size() == 1 && line.at(0) == 'q') {
-            break; 
-        } else {
-            err = true;
-        }
-    }
+        refresh();
 
+        char str[20];
+        switch((c = getch())) {
+        case KEY_UP:
+            highlightIdx--;
+            break;
+        case KEY_DOWN:
+            highlightIdx++;
+            break;
+        case KEY_LEFT:
+            timestamp--;
+            break;
+        case KEY_RIGHT:
+            timestamp++;
+            break;
+        case 't':
+            lined = !lined;
+            break;
+        case ':':
+            getstr(str);
+            sscanf(str, "%llu", &timestamp);
+            break;
+        case '/':
+            getstr(str);
+            sscanf(str, "%llu", &highlightIdx);
+            break;
+        case 'Q':
+            endwin();
+            return 0;
+        default:
+            err = true;
+            break;
+        }
+
+    }
+    
+    endwin();
     return 0;
+
 }

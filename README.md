@@ -37,17 +37,17 @@ make USE_OMP=1  # to use OpenMP
 
 # Usage
 
-Commands when viewing table (type the command + ENTER key):
+Commands when viewing table:
 | Command       | Description             |
 | -----------   | --------------------    |
-| `<#>`         | jump to time `<#>``      |
-| `.`           | next timestamp     |
-| `,`           | previous timestamp      |
-| `/<#>`        | highlight line at index `<#>`      |
-| `n`           | highlight next line          |
-| `p`           | highlight previous line      |
+| `:<#> + ENTER`         | jump to time `<#>`      |
+| `LEFT_ARROW`           | next timestamp     |
+| `RIGHT_ARROW`           | previous timestamp      |
+| `/<#> + ENTER`        | highlight line at index `<#>`      |
+| `DOWN_ARROW`           | highlight next line          |
+| `UP_ARROW`           | highlight previous line      |
 | `t`           | toggle table with/without horizontal lines      |
-| `q`           | quit      |
+| `Q`           | quit      |
 
 
 # Details
