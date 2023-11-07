@@ -1,10 +1,10 @@
 # tabuwave
 
-Tabular waveform viewer. Instead of using the traditional signal-to-time dimensions, Tabuwave uses an index-to-signal dimension at a specific time to make it easier to compare the same bit/groups of bits across multibit signals, such as a scoreboard represented as masks or vectors. Currently only supports VCD files as input.
+Tabular waveform viewer as a simple terminal user interface. Instead of using the traditional signal-to-time dimensions, Tabuwave uses an index-to-signal dimension at a specific time to make it easier to compare the same bit/groups of bits across multibit signals, such as a scoreboard or buffer of entries represented as masks or vectors. Currently only supports VCD files as input.
 
-# Usage
+# Compilation
 
-## General usage
+## General compilation
 
 [Install Boost libraries](https://www.boost.org/doc/libs/1_83_0/more/getting_started/index.html) and [change the path to Boost in the Makefile](Makefile#L17) or specify the `BOOST_DIR` when compiling with `make` if needed.
 ```
@@ -25,7 +25,7 @@ See help text with `-h`
 
 ## PACE-ICE instructions
 
-The Makefile has been designed to work on my local machine and PACE-ICE. To compile and run on PACE-ICE:
+The Makefile has been designed to work on my local machine and the PACE-ICE cluster. To compile and run on PACE-ICE:
 ```
 module load boost
 
@@ -34,6 +34,20 @@ make USE_OMP=1  # to use OpenMP
 
 ./tabuwave -f vcd/test.vcd 
 ```
+
+# Usage
+
+Commands when viewing table (type the command + ENTER key):
+| Command       | Description             |
+| -----------   | --------------------    |
+| `<#>`         | jump to time `<#>``      |
+| `.`           | next timestamp     |
+| `,`           | previous timestamp      |
+| `/<#>`        | highlight line at index `<#>`      |
+| `n`           | highlight next line          |
+| `p`           | highlight previous line      |
+| `t`           | toggle table with/without horizontal lines      |
+| `q`           | quit      |
 
 
 # Details

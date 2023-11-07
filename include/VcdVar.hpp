@@ -19,6 +19,7 @@ class VcdVar : public VcdScope {
 
    public:
     std::string getName();
+    size_t getSize();
     std::string getValueAt(uint64_t time);
     friend class Parser;
 };
