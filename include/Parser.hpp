@@ -1,12 +1,11 @@
-#ifndef __PARSER_H
-#define __PARSER_H
+#ifndef __PARSER_HPP
+#define __PARSER_HPP
 
 #include <map>
 #include <string>
 #include <chrono>
 
-#include "VcdScope.hpp"
-#include "VcdVar.hpp"
+#include "Vcd.hpp"
 
 class Parser {
    private:

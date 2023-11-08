@@ -84,7 +84,7 @@ void Parser::parse() {
                             curr_scope = next_scope;
                         }
                         else // top level, have visited before
-                            curr_scope = curr_scope->children[next_scope->name];
+                            curr_scope = (VcdScope*) curr_scope->children[next_scope->name];
                         break;
                     }
                     case PARSE_VAR: {
@@ -257,7 +257,7 @@ VcdVar* Parser::getVcdVar(std::string hierarchicalName, VcdScope* scope) {
     hierarchicalName.erase(0, pos + 1);
     while ((pos = hierarchicalName.find('.')) != std::string::npos) {
         token = hierarchicalName.substr(0, pos);
-        curr_scope = curr_scope->children[token];
+        curr_scope = (VcdScope*) curr_scope->children[token];
         hierarchicalName.erase(0, pos + 1);
     }
     return (VcdVar*) curr_scope->children[hierarchicalName];
