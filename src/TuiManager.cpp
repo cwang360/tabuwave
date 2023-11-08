@@ -45,15 +45,14 @@ void TuiManager::print_menu(WINDOW* w, VcdNode* top, unsigned int level) {
             wattrset(w, A_NORMAL);
         }
         if (menuItem.node->getType() == VcdNode::SCOPE) {
-            wprintw(w, "\n\r% *c %s", 4 * menuItem.level + 1, menuItem.expanded ? 'v' : '>', menuItem.node->getName().c_str());
+            wprintw(w, "\n\r% *c %s", 3 * menuItem.level, menuItem.expanded ? 'v' : '>', menuItem.node->getName().c_str());
         } else { // var
-            wprintw(w, "\n\r% *c%s", 4 * menuItem.level, ' ', menuItem.node->getName().c_str());
+            wprintw(w, "\n\r% *c %s", 3 * menuItem.level, ' ', menuItem.node->getName().c_str());
         }
     }
 }
 
 void TuiManager::display_menu_mode(VcdScope* top) {
-    int scrollPos = 0;
     if (visibleMenuItems.empty()) {
         visibleMenuItems.emplace_back(MenuItem(top, 0));
         expand(visibleMenuItems.begin());
@@ -76,21 +75,24 @@ void TuiManager::display_menu_mode(VcdScope* top) {
         } else {
             display_bottom_line(DISPLAY_INFO, "%d selected. ENTER to continue.\n\r", selected.size());
         }
-        refresh();
         print_menu(w, top, 0);
         refresh();
-        prefresh(w, scrollPos, 0, 0, 0, height - 3, width);
+        int horizontalPos = std::distance(visibleMenuItems.begin(), cursorPos);
+        if (horizontalPos < ((height - 3) / 2)) {
+            horizontalPos = 0;
+        } else {
+            horizontalPos = horizontalPos - ((height - 3) / 2);
+        }
+        prefresh(w, horizontalPos, 0, 0, 0, height - 3, width);
         move(height - 2, 0);
 
         switch((c = getch())) {
         case KEY_UP:
         case 'k':
-            scrollPos--;
             --cursorPos;
             break;
         case KEY_DOWN:
         case 'j':
-            scrollPos++;
             ++cursorPos;
             break;
         case ' ':
@@ -195,7 +197,6 @@ void TuiManager::display_table_mode() {
 
 void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool lined, uint64_t highlight_idx) {
     maxSelectedSize = 0;
-    std::list<std::string> values;
     std::vector<size_t> colWidths;
     size_t totalWidth = 8;
     attrset(DISPLAY_BOLD);
@@ -203,12 +204,6 @@ void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool li
     printw("t = %llu\n\n\r", timestamp);
     printw(" index |");
     for (auto& var : vars) {
-        std::string val = var->getValueAt(timestamp);
-        if (var->getSize() > 1) {
-            values.push_back(val.substr(1, val.size())); // remove 'b' prefix
-        } else {
-            values.push_back(val);
-        }
         colWidths.push_back(var->getName().size() + 1);
         totalWidth += var->getName().size() + 3;
         printw(" %s |", var->getName().c_str());
@@ -216,7 +211,8 @@ void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool li
     }
     
     WINDOW *w;
-    w = newpad (maxSelectedSize * 2 + 3, width);
+    int padHeight = maxSelectedSize * 2 + 3;
+    w = newpad (padHeight, width);
     scrollok(w, TRUE);
 
     if (lined) printw("\n\r%s", std::string(totalWidth, '=').c_str());
@@ -229,10 +225,14 @@ void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool li
         size_t col = 0;
         wattrset(w, A_NORMAL);
         if (i == highlight_idx) wattrset(w, DISPLAY_INFO);
-        for (auto& val : values) {
+        for (auto& var : vars) {
+            std::string val = var->getValueAt(timestamp);
+            if (var->getSize() > 1) {
+                val = val.substr(1, val.size()); // remove 'b' prefix
+            }
             if (i < val.size()) {
                 wprintw(w, "% *c |", colWidths.at(col), val.at(val.size() - 1 - i));
-            } else if (val.size() < maxSelectedSize) {
+            } else if (var->getSize() < maxSelectedSize) {
                 wprintw(w, "% *c |", colWidths.at(col), ' ');
             } else {
                 wprintw(w, "% *c |", colWidths.at(col), '0');
@@ -245,7 +245,13 @@ void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool li
     }
     wattrset(w, DISPLAY_BOLD);
     wprintw(w, "t = %llu\n\n\r", timestamp);
-    prefresh(w, (highlight_idx == (uint64_t)-1) ? 0 : highlight_idx, 0, 4, 0, height - 3, width);
+    int horizontalPos = (highlight_idx == (uint64_t)-1) ? 0 : highlight_idx + (lined * highlight_idx + 1);
+    if (horizontalPos < ((height - 3) / 2)) {
+        horizontalPos = 0;
+    } else {
+        horizontalPos = horizontalPos - ((height - 3) / 2);
+    }
+    prefresh(w, horizontalPos, 0, 4, 0, height - 3, width);
 }
 
 void TuiManager::expand(std::list<TuiManager::MenuItem>::iterator scope_itr) {

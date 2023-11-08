@@ -17,12 +17,6 @@ make BOOST_DIR=<your boost path> USE_OMP=1
 ```
 If `USE_OMP` is not defined, `std::thread` is used for multithreading by default.
 
-Run with (for example):
-```
-./tabuwave -f vcd/test.vcd 
-```
-See help text with `-h`
-
 ## PACE-ICE instructions
 
 The Makefile has been designed to work on my local machine and the PACE-ICE cluster (for ECE 4122). To compile and run on PACE-ICE:
@@ -37,6 +31,13 @@ make USE_OMP=1  # to use OpenMP
 NOTE: The `ncurses` dynamic library on PACE-ICE causes a segfault when `newpad` is called, so the TUI is essentially unusable there. However, you can still run on PACE-ICE to see the parse times and value interval processing times.
 
 # Usage
+
+Run with (for example):
+```
+./tabuwave -f vcd/test.vcd 
+```
+See help text with `-h`
+
 When run, Tabuwave will perform parsing and preprocessing and report the processing times and VCD file metadata on the first screen. Press `ENTER` to move onto signal selection menu screen.
 
 ## Commands when navigating menu
