@@ -16,10 +16,11 @@
 void Parser::parse() {
     // Determine the number of threads that can run concurrently
     uint64_t numThreads = std::thread::hardware_concurrency();
-    std::cout << "Your computer supports " << numThreads << " concurrent threads.\n";
+    printw("Your computer supports %llu concurrent threads.\n\r", numThreads);
 #ifdef USE_OMP
-    std::cout << "Using OpenMP.\n";
+    printw("Using OpenMP.\n\r", numThreads);
 #endif
+    refresh();
 
     std::ifstream infile(filename);
     std::string line;
@@ -30,7 +31,7 @@ void Parser::parse() {
     std::string date;
     std::string timescale;
 
-    startMeasureTime();
+    startMeasureTime("Parsing...");
 
     while (std::getline(infile, line)) {
         boost::algorithm::trim(line);
@@ -131,10 +132,11 @@ void Parser::parse() {
             }
         }
     }
+    maxTime = curr_time;
 
     endMeasureTime("Parse Time");
     
-    startMeasureTime();
+    startMeasureTime("Processing data into value intervals...");
 
 #ifdef USE_OMP
     constructValueIntervals();
@@ -178,6 +180,7 @@ void Parser::parse() {
         timescale.c_str(),
         top_scope->name.c_str()
     );
+    refresh();
 
 }
 
@@ -211,7 +214,7 @@ void Parser::constructValueIntervals(uint64_t startIdx, uint64_t endIdx) {
         var->interval_values +=
             std::make_pair(
                 boost::icl::interval<uint64_t>::right_open(
-                    prev_timestamp, curr_time
+                    prev_timestamp, maxTime + 1
                 ),       
                 prev_value);
     }
@@ -267,11 +270,18 @@ VcdVar* Parser::getVcdVar(std::string hierarchicalName) {
     return getVcdVar(hierarchicalName, top_scope);
 }
 
-void Parser::startMeasureTime() {
+void Parser::startMeasureTime(const char* message) {
     startTime = std::chrono::high_resolution_clock::now();
+    printw("%s\n\r", message);
+    refresh();
 }
 
-void Parser::endMeasureTime(std::string desc) {
+void Parser::endMeasureTime(const char* desc) {
     auto elapsed = std::chrono::high_resolution_clock::now() - startTime;
-    printw("%s: %llu us\n\r", desc.c_str(), std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count());
+    printw("%s: %llu us\n\r", desc, std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count());
+    refresh();
+}
+
+size_t Parser::getMaxTime() {
+    return maxTime;
 }

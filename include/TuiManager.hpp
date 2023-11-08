@@ -33,6 +33,8 @@ class TuiManager {
     std::list<MenuItem> visibleMenuItems;
     std::list<MenuItem>::iterator cursorPos;
     std::set<VcdVar*> selected;
+    size_t maxSelectedSize;
+    size_t maxTime;
 
     void print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool lined,
                      uint64_t highlight_idx);
@@ -47,6 +49,7 @@ class TuiManager {
     void clear_bottom_line();
     void display_table_mode();
     void display_menu_mode(VcdScope* top);
+    void set_max_time(size_t time);
 };
 
 #endif

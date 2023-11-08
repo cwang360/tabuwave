@@ -25,7 +25,8 @@ class Parser {
     std::string filename;
     VcdScope* top_scope;
     State curr_state;
-    uint64_t curr_time;
+    size_t curr_time;
+    size_t maxTime;
     std::vector<std::string> var_hashes;
     std::map<std::string, VcdVar*> var_map;
     std::list<VcdScope*> scopes;
@@ -36,8 +37,8 @@ class Parser {
 #ifdef USE_OMP
     void constructValueIntervals();
 #endif
-    void startMeasureTime();
-    void endMeasureTime(std::string desc);
+    void startMeasureTime(const char* message);
+    void endMeasureTime(const char* desc);
 
    public:
     Parser(std::string filename)
@@ -47,6 +48,7 @@ class Parser {
     VcdScope* getTop();
     VcdVar* getVcdVar(std::string hierarchicalName, VcdScope* scope);
     VcdVar* getVcdVar(std::string hierarchicalName);
+    size_t getMaxTime();
 };
 
 #endif

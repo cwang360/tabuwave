@@ -29,6 +29,8 @@ void TuiManager::display_bottom_line(attr_t attr, const char* str, ...) {
 }
 
 void TuiManager::clear_bottom_line() {
+    move(height - 2, 0);
+    clrtoeol();
     move(height - 1, 0);
     clrtoeol();
 }
@@ -147,7 +149,6 @@ void TuiManager::display_table_mode() {
             err = false;
         } 
         refresh();
-        // print_table(vars, timestamp, lined, highlightIdx);
         print_table(selected, timestamp, lined, highlightIdx);
         move(height - 2, 0);
 
@@ -155,19 +156,19 @@ void TuiManager::display_table_mode() {
         switch((c = getch())) {
         case KEY_UP:
         case 'k':
-            highlightIdx--;
+            highlightIdx = (highlightIdx == 0) ? maxSelectedSize - 1 : highlightIdx - 1;
             break;
         case KEY_DOWN:
         case 'j':
-            highlightIdx++;
+            highlightIdx = (highlightIdx == maxSelectedSize - 1) ? 0 : highlightIdx + 1;
             break;
         case KEY_LEFT:
         case 'h':
-            timestamp--;
+            if (timestamp > 0) timestamp--;
             break;
         case KEY_RIGHT:
         case 'l':
-            timestamp++;
+            if (timestamp < maxTime) timestamp++;
             break;
         case 't':
             lined = !lined;
@@ -175,10 +176,12 @@ void TuiManager::display_table_mode() {
         case ':':
             getstr(str);
             sscanf(str, "%llu", &timestamp);
+            if (timestamp > maxTime) timestamp = maxTime;
             break;
         case '/':
             getstr(str);
             sscanf(str, "%llu", &highlightIdx);
+            if (highlightIdx > maxSelectedSize - 1) highlightIdx = -1;
             break;
         case 'Q':
             return;
@@ -191,7 +194,7 @@ void TuiManager::display_table_mode() {
 }
 
 void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool lined, uint64_t highlight_idx) {
-    size_t maxSelectedSize = 0;
+    maxSelectedSize = 0;
     std::list<std::string> values;
     std::vector<size_t> colWidths;
     size_t totalWidth = 8;
@@ -200,7 +203,12 @@ void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool li
     printw("t = %llu\n\n\r", timestamp);
     printw(" index |");
     for (auto& var : vars) {
-        values.push_back(var->getValueAt(timestamp));
+        std::string val = var->getValueAt(timestamp);
+        if (var->getSize() > 1) {
+            values.push_back(val.substr(1, val.size())); // remove 'b' prefix
+        } else {
+            values.push_back(val);
+        }
         colWidths.push_back(var->getName().size() + 1);
         totalWidth += var->getName().size() + 3;
         printw(" %s |", var->getName().c_str());
@@ -222,8 +230,10 @@ void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool li
         wattrset(w, A_NORMAL);
         if (i == highlight_idx) wattrset(w, DISPLAY_INFO);
         for (auto& val : values) {
-            if (i < val.size() - 1) {
+            if (i < val.size()) {
                 wprintw(w, "% *c |", colWidths.at(col), val.at(val.size() - 1 - i));
+            } else if (val.size() < maxSelectedSize) {
+                wprintw(w, "% *c |", colWidths.at(col), ' ');
             } else {
                 wprintw(w, "% *c |", colWidths.at(col), '0');
             }
@@ -254,4 +264,8 @@ void TuiManager::collapse(std::list<TuiManager::MenuItem>::iterator scope_itr) {
     assert(scope_itr->node->getType() == VcdNode::SCOPE);
     visibleMenuItems.erase(std::next(scope_itr), scope_itr->lastChild);
     scope_itr->expanded = false;
+}
+
+void TuiManager::set_max_time(size_t time) {
+    maxTime = time;
 }

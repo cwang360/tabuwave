@@ -42,8 +42,8 @@ When run, Tabuwave will perform parsing and preprocessing and report the process
 ## Commands when navigating menu
 | Command       | Description             |
 | -----------   | --------------------    |
-| `DOWN_ARROW`           | move cursor down in menu          |
-| `UP_ARROW`           | move cursor up in menu      |
+| `DOWN_ARROW` or `j`           | move cursor down in menu          |
+| `UP_ARROW` or `k`           | move cursor up in menu      |
 | `SPACE`           | expand/collapse scope in menu      |
 | `s`           | select/unselect signal to view in table      |
 | `C`           | unselect all      |
@@ -55,11 +55,11 @@ When run, Tabuwave will perform parsing and preprocessing and report the process
 | Command       | Description             |
 | -----------   | --------------------    |
 | `:<#> + ENTER`         | jump to time `<#>`      |
-| `LEFT_ARROW`           | next timestamp     |
-| `RIGHT_ARROW`           | previous timestamp      |
+| `LEFT_ARROW` or `h`          | next timestamp     |
+| `RIGHT_ARROW` or `l`          | previous timestamp      |
 | `/<#> + ENTER`        | highlight line at index `<#>`      |
-| `DOWN_ARROW`           | highlight next line          |
-| `UP_ARROW`           | highlight previous line      |
+| `DOWN_ARROW` or `k`           | highlight next line          |
+| `UP_ARROW` or `j`           | highlight previous line      |
 | `t`           | toggle table with/without horizontal lines      |
 | `Q`           | quit (return to menu)      |
 
@@ -73,7 +73,7 @@ This is a custom project submission for ECE 4122, so below are what fulfill the 
     - `VcdNode` is a base class to represent a node in the tree-like data structure that the VCD file is parsed into. 
         - `VcdScope` is a derived class to represent a "scope" which can have any number of children that are instances of `VcdNode`.
         - `VcdVar` is a derived class to represent a variable type from the VCD file. `VcdVar` cannot have children but has some additional members, such as time-value information. VCD files store data as value change records. This is parsed and then stored into interval trees to be able to quickly query the value at any time within the simulation. `boost::icl::interval_map` is used for robustness.
-    - `TuiManager` is a wrapper class for `ncurses` functions to make it easier and more readable to manipulate the TUI.
+    - `TuiManager` is a wrapper class for `ncurses` functions and keeps state for Tabuwave's purposes to make it easier and more readable to manipulate the TUI.
 - Multithreading
     - See [Parser.cpp](src/Parser.cpp)
     - Multithreading is used to process vcd data for each `VcdVar` into its own interval_map in parallel.

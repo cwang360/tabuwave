@@ -42,6 +42,7 @@ int main(int argc, char **argv) {
     Parser parser(waveform_file);
     parser.parse();
 
+    tui.set_max_time(parser.getMaxTime());
     tui.display_bottom_line(DISPLAY_INFO, "ENTER to continue\n\r");
 
     refresh();
