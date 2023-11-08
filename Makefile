@@ -5,11 +5,11 @@ CXXFLAGS = -g -MMD -Wall -pedantic -Werror -std=c++2a -I$(INC_DIR) -I$(BOOST_DIR
 LIBS = -lm -lncurses
 
 CC = gcc
-ifeq ($(UNAME), Darwin)
-CXX = g++-13
-else
+# ifeq ($(UNAME), Darwin)
+# CXX = g++-13
+# else
 CXX = g++
-endif
+# endif
 
 SRC_DIR = src
 OBJ_DIR = obj

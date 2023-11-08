@@ -34,11 +34,24 @@ make USE_OMP=1  # to use OpenMP
 
 ./tabuwave -f vcd/test.vcd 
 ```
-NOTE: The `ncurses` dynamic library on PACE-ICE causes a segfault when `newpad` is called, so the TUI is unusable there. However, you can still run on PACE-ICE to see the parse times and value interval processing times.
+NOTE: The `ncurses` dynamic library on PACE-ICE causes a segfault when `newpad` is called, so the TUI is essentially unusable there. However, you can still run on PACE-ICE to see the parse times and value interval processing times.
 
 # Usage
+When run, Tabuwave will perform parsing and preprocessing and report the processing times and VCD file metadata on the first screen. Press `ENTER` to move onto signal selection menu screen.
 
-Commands when viewing table:
+## Commands when navigating menu
+| Command       | Description             |
+| -----------   | --------------------    |
+| `DOWN_ARROW`           | move cursor down in menu          |
+| `UP_ARROW`           | move cursor up in menu      |
+| `SPACE`           | expand/collapse scope in menu      |
+| `s`           | select/unselect signal to view in table      |
+| `C`           | unselect all      |
+| `ENTER`           | go to table with selected signals      |
+| `Q`           | quit (exit program)      |
+
+
+## Commands when viewing table
 | Command       | Description             |
 | -----------   | --------------------    |
 | `:<#> + ENTER`         | jump to time `<#>`      |
@@ -48,7 +61,7 @@ Commands when viewing table:
 | `DOWN_ARROW`           | highlight next line          |
 | `UP_ARROW`           | highlight previous line      |
 | `t`           | toggle table with/without horizontal lines      |
-| `Q`           | quit      |
+| `Q`           | quit (return to menu)      |
 
 
 # Details
