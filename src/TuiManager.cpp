@@ -227,15 +227,17 @@ void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool li
         if (i == highlight_idx) wattrset(w, DISPLAY_INFO);
         for (auto& var : vars) {
             std::string val = var->getValueAt(timestamp);
+            char filler;
             if (var->getSize() > 1) {
                 val = val.substr(1, val.size()); // remove 'b' prefix
             }
+            filler = (val.size() == 1 && val.at(0) == 'x') ? 'x' : '0';
             if (i < val.size()) {
                 wprintw(w, "% *c |", colWidths.at(col), val.at(val.size() - 1 - i));
-            } else if (var->getSize() < maxSelectedSize) {
-                wprintw(w, "% *c |", colWidths.at(col), ' ');
+            } else if (i < var->getSize()) {
+                wprintw(w, "% *c |", colWidths.at(col), filler);
             } else {
-                wprintw(w, "% *c |", colWidths.at(col), '0');
+                wprintw(w, "% *c |", colWidths.at(col), ' ');
             }
             col++;
         }
