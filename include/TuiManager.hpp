@@ -32,11 +32,11 @@ class TuiManager {
     };
     std::list<MenuItem> visibleMenuItems;
     std::list<MenuItem>::iterator cursorPos;
-    std::set<VcdVar*> selected;
+    std::set<VcdPrimitive*> selected;
     size_t maxSelectedSize;
     size_t maxTime;
 
-    void print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool lined,
+    void print_table(std::set<VcdPrimitive*> vars, uint64_t timestamp, bool lined,
                      uint64_t highlight_idx);
     void print_menu(WINDOW* w, VcdNode* top, unsigned int level);
     void expand(std::list<MenuItem>::iterator scope);

@@ -8,6 +8,7 @@
 #include <sstream>
 #include <thread>
 #include <ncurses.h>
+#include <regex>
 
 #if USE_OMP
 #include <omp.h>
@@ -30,6 +31,7 @@ void Parser::parse() {
     std::string version;
     std::string date;
     std::string timescale;
+    std::regex unpackedVecRegex("^.+\\[[0-9]+\\]$");
 
     startMeasureTime("Parsing...");
 
@@ -85,7 +87,7 @@ void Parser::parse() {
                             curr_scope = next_scope;
                         }
                         else // top level, have visited before
-                            curr_scope = (VcdScope*) curr_scope->children[next_scope->name];
+                            curr_scope = dynamic_cast<VcdScope*>(curr_scope->children[next_scope->name]);
                         break;
                     }
                     case PARSE_VAR: {
@@ -108,7 +110,26 @@ void Parser::parse() {
                             var_map[hash] = curr_var;
                             var_hashes.push_back(hash);
                         }
-                        curr_scope->children[var_map[hash]->name] = var_map[hash];
+                        if (std::regex_match(name, unpackedVecRegex)) { 
+                            // unpacked vector, extract name to use as scope
+                            std::string scope_name = name.substr(0, name.find("["));
+                            VcdScope* vec_scope;
+                            if (vec_scopes.count(scope_name)) {
+                                vec_scope = vec_scopes[scope_name];
+                            } else {
+                                vec_scope = new VcdVecScope();
+                                vec_scope->name = scope_name;
+                                vec_scope->parent = curr_scope;
+                                vec_scope->type = VcdNode::VEC_SCOPE;
+                                curr_scope->children[scope_name] = vec_scope;
+                                scopes.emplace_back(vec_scope);
+                                vec_scopes[scope_name] = vec_scope;
+                            }
+                            var_map[hash]->parent = vec_scope;
+                            vec_scope->children[var_map[hash]->name] = var_map[hash];
+                        } else {
+                            curr_scope->children[var_map[hash]->name] = var_map[hash];
+                        }
                         break;
                     }
                     case PARSE_VALUES: {
@@ -260,10 +281,10 @@ VcdVar* Parser::getVcdVar(std::string hierarchicalName, VcdScope* scope) {
     hierarchicalName.erase(0, pos + 1);
     while ((pos = hierarchicalName.find('.')) != std::string::npos) {
         token = hierarchicalName.substr(0, pos);
-        curr_scope = (VcdScope*) curr_scope->children[token];
+        curr_scope = dynamic_cast<VcdScope*>(curr_scope->children[token]);
         hierarchicalName.erase(0, pos + 1);
     }
-    return (VcdVar*) curr_scope->children[hierarchicalName];
+    return dynamic_cast<VcdVar*>(curr_scope->children[hierarchicalName]);
 }
 
 VcdVar* Parser::getVcdVar(std::string hierarchicalName) {

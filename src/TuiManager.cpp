@@ -1,5 +1,4 @@
 #include "TuiManager.hpp"
-#include <regex>
 
 TuiManager::TuiManager() {
     initscr();    /* Start curses mode */
@@ -39,12 +38,12 @@ void TuiManager::print_menu(WINDOW* w, VcdNode* top, unsigned int level) {
     for (auto& menuItem : visibleMenuItems) {
         if (cursorPos->node == menuItem.node) {
             wattrset(w, DISPLAY_INFO);
-        } else if (selected.count((VcdVar*) menuItem.node)) {
+        } else if (selected.count(dynamic_cast<VcdPrimitive*>(menuItem.node))) {
             wattrset(w, DISPLAY_SELECTED);
         } else {
             wattrset(w, A_NORMAL);
         }
-        if (menuItem.node->getType() == VcdNode::SCOPE) {
+        if (menuItem.node->getType() == VcdNode::SCOPE || menuItem.node->getType() == VcdNode::VEC_SCOPE) {
             wprintw(w, "\n\r% *c %s", 3 * menuItem.level, menuItem.expanded ? 'v' : '>', menuItem.node->getName().c_str());
         } else { // var
             wprintw(w, "\n\r% *c %s", 3 * menuItem.level, ' ', menuItem.node->getName().c_str());
@@ -96,7 +95,7 @@ void TuiManager::display_menu_mode(VcdScope* top) {
             ++cursorPos;
             break;
         case ' ':
-            if (cursorPos->node->getType() == VcdNode::SCOPE) {
+            if ((cursorPos->node->getType() == VcdNode::SCOPE) || (cursorPos->node->getType() == VcdNode::VEC_SCOPE)) {
                 if (cursorPos->expanded) {
                     collapse(cursorPos);
                 } else {
@@ -107,11 +106,11 @@ void TuiManager::display_menu_mode(VcdScope* top) {
             }
             break;
         case 's':
-            if (cursorPos->node->getType() == VcdNode::VAR) {
-                if (selected.count((VcdVar*) cursorPos->node)) {
-                    selected.erase((VcdVar*) cursorPos->node);
+            if ((cursorPos->node->getType() == VcdNode::VAR) || (cursorPos->node->getType() == VcdNode::VEC_SCOPE)) {
+                if (selected.count(dynamic_cast<VcdPrimitive*>(cursorPos->node))) {
+                    selected.erase(dynamic_cast<VcdPrimitive*>(cursorPos->node));
                 } else {
-                    selected.insert((VcdVar*) cursorPos->node);
+                    selected.insert(dynamic_cast<VcdPrimitive*>(cursorPos->node));
                 }
             } else {
                 err = true;
@@ -139,7 +138,6 @@ void TuiManager::display_table_mode() {
     uint64_t highlightIdx = -1;
     uint64_t timestamp = 0;
     bool err = false;
-    std::regex nonNegIntRegex("^[0-9]+$");
 
     while(1)
     {
@@ -195,21 +193,25 @@ void TuiManager::display_table_mode() {
     }
 }
 
-void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool lined, uint64_t highlight_idx) {
+void TuiManager::print_table(std::set<VcdPrimitive*> vars, uint64_t timestamp, bool lined, uint64_t highlight_idx) {
     maxSelectedSize = 0;
     std::vector<size_t> colWidths;
+    std::list<std::vector<std::string>> values;
     size_t totalWidth = 8;
     attrset(DISPLAY_BOLD);
     move(0, 0);
     printw("t = %llu\n\n\r", timestamp);
     printw(" index |");
     for (auto& var : vars) {
-        colWidths.push_back(var->getName().size() + 1);
-        totalWidth += var->getName().size() + 3;
-        printw(" %s |", var->getName().c_str());
+        size_t width = var->getWidth();
+        colWidths.push_back(width);
+        totalWidth += width + 2;
+        printw("% *s |", width, var->getName().c_str());
         if (var->getSize() > maxSelectedSize) maxSelectedSize = var->getSize();
     }
-    
+    for (auto& var : vars) {
+        values.emplace_back(var->getValueAt(timestamp, maxSelectedSize));
+    }
     WINDOW *w;
     int padHeight = maxSelectedSize * 2 + 3;
     w = newpad (padHeight, width);
@@ -225,20 +227,8 @@ void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool li
         size_t col = 0;
         wattrset(w, A_NORMAL);
         if (i == highlight_idx) wattrset(w, DISPLAY_INFO);
-        for (auto& var : vars) {
-            std::string val = var->getValueAt(timestamp);
-            char filler;
-            if (var->getSize() > 1) {
-                val = val.substr(1, val.size()); // remove 'b' prefix
-            }
-            filler = (val.size() == 1 && val.at(0) == 'x') ? 'x' : '0';
-            if (i < val.size()) {
-                wprintw(w, "% *c |", colWidths.at(col), val.at(val.size() - 1 - i));
-            } else if (i < var->getSize()) {
-                wprintw(w, "% *c |", colWidths.at(col), filler);
-            } else {
-                wprintw(w, "% *c |", colWidths.at(col), ' ');
-            }
+        for (auto& val : values) {
+            wprintw(w, "% *s |", colWidths.at(col), val.at(i).c_str());
             col++;
         }
         
@@ -258,9 +248,9 @@ void TuiManager::print_table(std::set<VcdVar*> vars, uint64_t timestamp, bool li
 
 void TuiManager::expand(std::list<TuiManager::MenuItem>::iterator scope_itr) {
     assert(!scope_itr->expanded);
-    assert(scope_itr->node->getType() == VcdNode::SCOPE);
+    assert(scope_itr->node->getType() == VcdNode::SCOPE || scope_itr->node->getType() == VcdNode::VEC_SCOPE);
     auto curr_itr = std::next(scope_itr);
-    for (auto& child : ((VcdScope*) scope_itr->node)->getChildren()) {
+    for (auto& child : dynamic_cast<VcdScope*>(scope_itr->node)->getChildren()) {
         visibleMenuItems.insert(curr_itr, MenuItem(child.second, scope_itr->level + 1));
     }
     scope_itr->expanded = true;
@@ -269,7 +259,7 @@ void TuiManager::expand(std::list<TuiManager::MenuItem>::iterator scope_itr) {
 
 void TuiManager::collapse(std::list<TuiManager::MenuItem>::iterator scope_itr) {
     assert(scope_itr->expanded);
-    assert(scope_itr->node->getType() == VcdNode::SCOPE);
+    assert(scope_itr->node->getType() == VcdNode::SCOPE || scope_itr->node->getType() == VcdNode::VEC_SCOPE);
     visibleMenuItems.erase(std::next(scope_itr), scope_itr->lastChild);
     scope_itr->expanded = false;
 }

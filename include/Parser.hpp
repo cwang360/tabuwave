@@ -29,7 +29,8 @@ class Parser {
     size_t maxTime;
     std::vector<std::string> var_hashes;
     std::map<std::string, VcdVar*> var_map;
-    std::list<VcdScope*> scopes;
+    std::list<VcdScope*> scopes; // to keep track for deleting and not double-deleting
+    std::map<std::string, VcdScope*> vec_scopes;
     std::chrono::high_resolution_clock::time_point startTime;
 
     inline State getParseState(std::string token);
