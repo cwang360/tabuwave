@@ -1,4 +1,6 @@
 #include "Vcd.hpp"
+#include <iomanip>
+#include <cmath>
 
 const std::string VcdNode::getName() {
     return name;
@@ -34,8 +36,24 @@ const std::vector<std::string> VcdVar::getValueAt(uint64_t time, size_t vec_size
     return value_vec;
 }
 
+// done at runtime to take care of 'x' case
 const std::string VcdVar::getRawValueAt(uint64_t time) {
-    return interval_values(time);
+    // return interval_values(time);
+    std::string bin_val = interval_values(time);
+    bin_val = bin_val.substr(1, bin_val.size());
+    std::ostringstream stringStream;
+    if (size > 1) {
+        stringStream << 'h' << std::hex << std::setw(ceil(size / 4));
+        if (bin_val.at(0) == 'x') {
+            stringStream << std::setfill('x') << 'x';
+        } else {
+            uint64_t val = std::stoull(bin_val, nullptr, 2);
+            stringStream << std::setfill('0') << val;
+        }
+    } else {
+        stringStream << 'h' << bin_val;
+    }
+    return stringStream.str();
 }
 
 size_t VcdVar::getWidth() {
@@ -48,15 +66,19 @@ size_t VcdVecScope::getSize() {
 }
 
 size_t VcdVecScope::getWidth() {
-    return std::max(name.size() + 1, dynamic_cast<VcdVar*>(children.begin()->second)->getSize() + 2);
+    return std::max(name.size() + 1, (size_t) ceil(dynamic_cast<VcdVar*>(children.begin()->second)->getSize() / 4) + 2);
 }
 
 const std::vector<std::string> VcdVecScope::getValueAt(uint64_t time, size_t size) {
     std::vector<std::string> value_vec;
-    for (int i = 0; i < children.size(); i++) {
+    int i = 0;
+    for (; i < children.size(); i++) {
         std::ostringstream stringStream;
         stringStream << name << '[' << i << ']';
-        value_vec.push_back(dynamic_cast<VcdVar*>(children[stringStream.str()])->getRawValueAt(time));
+        value_vec.emplace_back(dynamic_cast<VcdVar*>(children[stringStream.str()])->getRawValueAt(time));
+    }
+    for (; i < size; i++) {
+        value_vec.emplace_back(" ");
     }
     return value_vec;
 }

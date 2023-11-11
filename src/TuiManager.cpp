@@ -88,11 +88,17 @@ void TuiManager::display_menu_mode(VcdScope* top) {
         switch((c = getch())) {
         case KEY_UP:
         case 'k':
-            --cursorPos;
+            if (cursorPos == visibleMenuItems.begin()) 
+                cursorPos = std::prev(visibleMenuItems.end());
+            else
+                --cursorPos;
             break;
         case KEY_DOWN:
         case 'j':
-            ++cursorPos;
+            if (cursorPos == std::prev(visibleMenuItems.end()))
+                cursorPos = visibleMenuItems.begin();
+            else
+                ++cursorPos;
             break;
         case ' ':
             if ((cursorPos->node->getType() == VcdNode::SCOPE) || (cursorPos->node->getType() == VcdNode::VEC_SCOPE)) {
