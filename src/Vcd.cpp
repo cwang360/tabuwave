@@ -43,7 +43,7 @@ const std::string VcdVar::getRawValueAt(uint64_t time) {
     bin_val = bin_val.substr(1, bin_val.size());
     std::ostringstream stringStream;
     if (size > 1) {
-        stringStream << 'h' << std::hex << std::setw(ceil(size / 4));
+        stringStream << 'h' << std::hex << std::setw(ceil(size / 4.0));
         if (bin_val.at(0) == 'x') {
             stringStream << std::setfill('x') << 'x';
         } else {
@@ -66,7 +66,7 @@ size_t VcdVecScope::getSize() {
 }
 
 size_t VcdVecScope::getWidth() {
-    return std::max(name.size() + 1, (size_t) ceil(dynamic_cast<VcdVar*>(children.begin()->second)->getSize() / 4) + 2);
+    return std::max(name.size() + 1, (size_t) ceil(dynamic_cast<VcdVar*>(children.begin()->second)->getSize() / 4.0) + 2);
 }
 
 const std::vector<std::string> VcdVecScope::getValueAt(uint64_t time, size_t size) {

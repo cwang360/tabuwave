@@ -26,7 +26,7 @@ module load boost
 make            # to use std::thread multithreading
 make USE_OMP=1  # to use OpenMP
 
-./tabuwave -f vcd/test.vcd 
+./tabuwave -f example/waveform.vcd 
 ```
 NOTE: The `ncurses` dynamic library on PACE-ICE causes a segfault when `newpad` is called, so the TUI is essentially unusable there. However, you can still run on PACE-ICE to see the parse times and value interval processing times.
 
@@ -34,7 +34,7 @@ NOTE: The `ncurses` dynamic library on PACE-ICE causes a segfault when `newpad` 
 
 Run with (for example):
 ```
-./tabuwave -f vcd/test.vcd 
+./tabuwave -f example/waveform.vcd 
 ```
 See help text with `-h`
 
@@ -66,6 +66,8 @@ When run, Tabuwave will perform parsing and preprocessing and report the process
 
 # Example
 
+When would you use a tabular waveform viewer? 
+
 Suppose you have designed a simple processor, and an assertion for your design related to verifying load behavior failed at t=19ps. You have a scoreboard-type data structure to keep track of instructions which is represented as arrays (`scrbrd_pc`, `scrbrd_opcode`) and masks (`scrbrd_completed`, `scrbrd_vld`), and to debug help the failure, you want to find the PCs for all the loads that haven't completed yet.
 
 In a traditional waveform viewer (GTKWave shown below), the unpacked arrays and multibit signals are laid out in vertical rows. It can be hard to visualize this data side-by-side and match the different properties at each index.
@@ -92,3 +94,4 @@ This is a custom project submission for ECE 4122, so below are what fulfill the 
     - See [Parser.cpp](src/Parser.cpp)
     - Multithreading is used to process vcd data for each `VcdVar` into its own interval_map in parallel.
     - Both hand-threading with `std::thread` (distributing work as evenly as possible among the available concurrent threads supported by hardware) and multithreading using `OpenMP` are implemented and can be switched/selected during compile time. See usage instructions.
+
