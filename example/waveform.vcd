@@ -6,7 +6,7 @@ $timescale 1ps $end
   $var wire  1 l in_completed_vld $end
   $var wire  5 g in_idx [4:0] $end
   $var wire  1 m in_invalidate_vld $end
-  $var wire  5 k in_opcode [4:0] $end
+  $var wire  7 k in_opcode [6:0] $end
   $var wire  1 j in_opcode_vld $end
   $var wire 32 i in_pc [31:0] $end
   $var wire  1 h in_pc_vld $end
@@ -19,44 +19,44 @@ $timescale 1ps $end
    $var wire  1 l in_completed_vld $end
    $var wire  5 g in_idx [4:0] $end
    $var wire  1 m in_invalidate_vld $end
-   $var wire  5 k in_opcode [4:0] $end
+   $var wire  7 k in_opcode [6:0] $end
    $var wire  1 j in_opcode_vld $end
    $var wire 32 i in_pc [31:0] $end
    $var wire  1 h in_pc_vld $end
    $var wire  1 f rst $end
    $var wire 32 $ scrbrd_completed [31:0] $end
-   $var wire  5 E scrbrd_opcode[0] [4:0] $end
-   $var wire  5 O scrbrd_opcode[10] [4:0] $end
-   $var wire  5 P scrbrd_opcode[11] [4:0] $end
-   $var wire  5 Q scrbrd_opcode[12] [4:0] $end
-   $var wire  5 R scrbrd_opcode[13] [4:0] $end
-   $var wire  5 S scrbrd_opcode[14] [4:0] $end
-   $var wire  5 T scrbrd_opcode[15] [4:0] $end
-   $var wire  5 U scrbrd_opcode[16] [4:0] $end
-   $var wire  5 V scrbrd_opcode[17] [4:0] $end
-   $var wire  5 W scrbrd_opcode[18] [4:0] $end
-   $var wire  5 X scrbrd_opcode[19] [4:0] $end
-   $var wire  5 F scrbrd_opcode[1] [4:0] $end
-   $var wire  5 Y scrbrd_opcode[20] [4:0] $end
-   $var wire  5 Z scrbrd_opcode[21] [4:0] $end
-   $var wire  5 [ scrbrd_opcode[22] [4:0] $end
-   $var wire  5 \ scrbrd_opcode[23] [4:0] $end
-   $var wire  5 ] scrbrd_opcode[24] [4:0] $end
-   $var wire  5 ^ scrbrd_opcode[25] [4:0] $end
-   $var wire  5 _ scrbrd_opcode[26] [4:0] $end
-   $var wire  5 ` scrbrd_opcode[27] [4:0] $end
-   $var wire  5 a scrbrd_opcode[28] [4:0] $end
-   $var wire  5 b scrbrd_opcode[29] [4:0] $end
-   $var wire  5 G scrbrd_opcode[2] [4:0] $end
-   $var wire  5 c scrbrd_opcode[30] [4:0] $end
-   $var wire  5 d scrbrd_opcode[31] [4:0] $end
-   $var wire  5 H scrbrd_opcode[3] [4:0] $end
-   $var wire  5 I scrbrd_opcode[4] [4:0] $end
-   $var wire  5 J scrbrd_opcode[5] [4:0] $end
-   $var wire  5 K scrbrd_opcode[6] [4:0] $end
-   $var wire  5 L scrbrd_opcode[7] [4:0] $end
-   $var wire  5 M scrbrd_opcode[8] [4:0] $end
-   $var wire  5 N scrbrd_opcode[9] [4:0] $end
+   $var wire  7 E scrbrd_opcode[0] [6:0] $end
+   $var wire  7 O scrbrd_opcode[10] [6:0] $end
+   $var wire  7 P scrbrd_opcode[11] [6:0] $end
+   $var wire  7 Q scrbrd_opcode[12] [6:0] $end
+   $var wire  7 R scrbrd_opcode[13] [6:0] $end
+   $var wire  7 S scrbrd_opcode[14] [6:0] $end
+   $var wire  7 T scrbrd_opcode[15] [6:0] $end
+   $var wire  7 U scrbrd_opcode[16] [6:0] $end
+   $var wire  7 V scrbrd_opcode[17] [6:0] $end
+   $var wire  7 W scrbrd_opcode[18] [6:0] $end
+   $var wire  7 X scrbrd_opcode[19] [6:0] $end
+   $var wire  7 F scrbrd_opcode[1] [6:0] $end
+   $var wire  7 Y scrbrd_opcode[20] [6:0] $end
+   $var wire  7 Z scrbrd_opcode[21] [6:0] $end
+   $var wire  7 [ scrbrd_opcode[22] [6:0] $end
+   $var wire  7 \ scrbrd_opcode[23] [6:0] $end
+   $var wire  7 ] scrbrd_opcode[24] [6:0] $end
+   $var wire  7 ^ scrbrd_opcode[25] [6:0] $end
+   $var wire  7 _ scrbrd_opcode[26] [6:0] $end
+   $var wire  7 ` scrbrd_opcode[27] [6:0] $end
+   $var wire  7 a scrbrd_opcode[28] [6:0] $end
+   $var wire  7 b scrbrd_opcode[29] [6:0] $end
+   $var wire  7 G scrbrd_opcode[2] [6:0] $end
+   $var wire  7 c scrbrd_opcode[30] [6:0] $end
+   $var wire  7 d scrbrd_opcode[31] [6:0] $end
+   $var wire  7 H scrbrd_opcode[3] [6:0] $end
+   $var wire  7 I scrbrd_opcode[4] [6:0] $end
+   $var wire  7 J scrbrd_opcode[5] [6:0] $end
+   $var wire  7 K scrbrd_opcode[6] [6:0] $end
+   $var wire  7 L scrbrd_opcode[7] [6:0] $end
+   $var wire  7 M scrbrd_opcode[8] [6:0] $end
+   $var wire  7 N scrbrd_opcode[9] [6:0] $end
    $var wire 32 % scrbrd_pc[0] [31:0] $end
    $var wire 32 / scrbrd_pc[10] [31:0] $end
    $var wire 32 0 scrbrd_pc[11] [31:0] $end
@@ -130,49 +130,49 @@ b00000000000000000000000000000000 A
 b00000000000000000000000000000000 B
 b00000000000000000000000000000000 C
 b00000000000000000000000000000000 D
-b00000 E
-b00000 F
-b00000 G
-b00000 H
-b00000 I
-b00000 J
-b00000 K
-b00000 L
-b00000 M
-b00000 N
-b00000 O
-b00000 P
-b00000 Q
-b00000 R
-b00000 S
-b00000 T
-b00000 U
-b00000 V
-b00000 W
-b00000 X
-b00000 Y
-b00000 Z
-b00000 [
-b00000 \
-b00000 ]
-b00000 ^
-b00000 _
-b00000 `
-b00000 a
-b00000 b
-b00000 c
-b00000 d
+b0000000 E
+b0000000 F
+b0000000 G
+b0000000 H
+b0000000 I
+b0000000 J
+b0000000 K
+b0000000 L
+b0000000 M
+b0000000 N
+b0000000 O
+b0000000 P
+b0000000 Q
+b0000000 R
+b0000000 S
+b0000000 T
+b0000000 U
+b0000000 V
+b0000000 W
+b0000000 X
+b0000000 Y
+b0000000 Z
+b0000000 [
+b0000000 \
+b0000000 ]
+b0000000 ^
+b0000000 _
+b0000000 `
+b0000000 a
+b0000000 b
+b0000000 c
+b0000000 d
 0e
 0f
 b00000 g
 0h
 b00000000000000000000000000000000 i
 0j
-b00000 k
+b0000000 k
 0l
 0m
 b00000000000000000000000000100000 n
-b00000000000000000000000000000101 o
+b00000000000000000000000000000111 o
 #1
 1f
 #2
@@ -183,21 +183,143 @@ b00000000000000000000000000000101 o
 #4
 1e
 #5
+b00000000000000000000000000000011 #
+b00000000000000101110111011110000 %
+b00000000000000101110111011110100 &
+b0110011 E
+b0110011 F
 0e
+b00001 g
 1h
-b00000000000000001011111011101111 i
+b00000000000000101110111011110100 i
 1j
-b00001 k
+b0110011 k
 #6
-b00000000000000000000000000000001 #
-b00000000000000001011111011101111 %
-b00001 E
 1e
 #7
+b00000000000000000000000000011111 #
+b00000000000000101110111011111000 '
+b00000000000000101110111011111100 (
+b00000000000000101110111100000000 )
+b0000011 G
+b0000011 H
+b0110011 I
 0e
+b00100 g
+b00000000000000101110111100000000 i
 #8
 1e
 #9
+b00000000000000000000000001111100 #
+b00000000000000000000000000000011 $
+b00000000000000101110111100000100 *
+b00000000000000101110111100001000 +
+b0100011 J
+b1100011 K
 0e
+b00001 g
+0h
+b00000000000000000000000000000000 i
+0j
+b0000000 k
+1l
+1m
 #10
+1e
+#11
+0e
+b00110 g
+1h
+b00000000000000101110111100001000 i
+1j
+b1100011 k
+0l
+0m
+#12
+1e
+#13
+b00000000000000000000011111111100 #
+b00000000000000101110111100001100 ,
+b00000000000000101110111100010000 -
+b00000000000000101110111100010100 .
+b00000000000000101110111100011000 /
+b0100011 L
+b1100011 M
+b0100011 N
+b1100011 O
+0e
+b01010 g
+b00000000000000101110111100011000 i
+#14
+1e
+#15
+b00000000000000000111100001111100 #
+b00000000000000000000000001000011 $
+b00000000000010111110111011111000 0
+b00000000000010111110111011111100 1
+b00000000000010111110111100000000 2
+b00000000000010111110111100000100 3
+b0000011 P
+b0000011 Q
+b0000011 R
+b0000011 S
+0e
+0h
+b00000000000000000000000000000000 i
+0j
+b0000000 k
+1m
+#16
+1e
+#17
+b00000000000001111111100001111100 #
+b00000000000010111110111100001000 4
+b00000000000010111110111100001100 5
+b00000000000010111110111100010000 6
+b00000000000010111110111100010100 7
+b0000011 T
+b0000011 U
+b0000011 V
+b0000011 W
+0e
+b10010 g
+1h
+b00000000000010111110111100010100 i
+1j
+b0000011 k
+0m
+#18
+1e
+#19
+b00000000000001111111100001110000 #
+b00000000000000000111100001001111 $
+0e
+b01110 g
+0h
+b00000000000000000000000000000000 i
+0j
+b0000000 k
+1l
+#20
+1e
+#21
+b00000000000001111111000000000000 #
+b00000000000001111111100001011111 $
+0e
+b10010 g
+#22
+1e
+#23
+b00000000000001110000000000000000 #
+0e
+b01111 g
+0l
+1m
+#24
+1e
+#25
+b00000000000000000000000000000000 #
+0e
+b10010 g
+#26
 1e

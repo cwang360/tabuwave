@@ -1,14 +1,22 @@
+/*
+ * Author:          Cynthia Wang
+ * Last modified:   11/11/2023
+ * Organization:    ECE 4122
+ *
+ * Description:
+ * A toy Verilog scoreboard that keeps track of PC, opcode, completed for
+ * instructions.
+*/
+
 `timescale 1ns / 1ps
 
 // Top module 
-
 module scoreboard #(
     parameter SCRBRD_SIZE = 32,
     parameter PC_WIDTH = 32,
-    parameter OPCODE_WIDTH = 5
+    parameter OPCODE_WIDTH = 7
 ) (
-    // Timing signals
-    input       clk,    // Clock
+    input       clk,  // Clock
     input       rst,  // Reset 
 
     // Input data signals

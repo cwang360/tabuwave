@@ -9,7 +9,7 @@ TuiManager::TuiManager() {
 
     init_pair(COLOR_ERROR, COLOR_WHITE, COLOR_RED);
     init_pair(COLOR_INFO, COLOR_BLUE, COLOR_WHITE);
-    init_pair(COLOR_BOLD, COLOR_GREEN, COLOR_WHITE);
+    init_pair(COLOR_BOLD, COLOR_BLUE, COLOR_GREEN);
     
     getmaxyx(stdscr, height, width);
 }
@@ -157,6 +157,7 @@ void TuiManager::display_table_mode() {
         refresh();
         print_table(selected, timestamp, lined, highlightIdx);
         move(height - 2, 0);
+        attrset(A_NORMAL);
 
         char str[20];
         switch((c = getch())) {
@@ -206,7 +207,7 @@ void TuiManager::print_table(std::set<VcdPrimitive*> vars, uint64_t timestamp, b
     size_t totalWidth = 8;
     attrset(DISPLAY_BOLD);
     move(0, 0);
-    printw("t = %llu\n\n\r", timestamp);
+    printw("t = %llu \n\n\r", timestamp);
     printw(" index |");
     for (auto& var : vars) {
         size_t width = var->getWidth();
@@ -241,8 +242,6 @@ void TuiManager::print_table(std::set<VcdPrimitive*> vars, uint64_t timestamp, b
         if (lined) wprintw(w, "\n\r%s", std::string(totalWidth, '-').c_str());
         wprintw(w, "\n\r");
     }
-    wattrset(w, DISPLAY_BOLD);
-    wprintw(w, "t = %llu\n\n\r", timestamp);
     int horizontalPos = (highlight_idx == (uint64_t)-1) ? 0 : highlight_idx + (lined * highlight_idx + 1);
     if (horizontalPos < ((height - 3) / 2)) {
         horizontalPos = 0;

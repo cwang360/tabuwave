@@ -1,14 +1,31 @@
+/*
+ * Author:          Cynthia Wang
+ * Last modified:   11/11/2023
+ * Organization:    ECE 4122
+ *
+ * Description:
+ * Driver code using Verilator to simulate updates in the scoreboard module
+ * and dump the waveform data into waveform.vcd. Its purpose is
+ * solely to generate a VCD file that is used to show a use case
+ * of tabuwave.
+*/
+
 #include <stdlib.h>
 #include <iostream>
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include "obj_dir/Vscoreboard.h" // Need to be modified for different verilog based modules
+#include "obj_dir/Vscoreboard.h" 
 
-#define MAX_TIME 10
 vluint64_t sim_time = 0;
 int total_errors = 0;
 
-// update the simulator's time
+/*
+ * Updates the simulator's time and the waveform trace
+ * Inputs:
+ *  dut       (Vscoreboard*) - pointer to an instance of the verilated model
+ *  m_trace   (VerilatedVcdC*) - pointer to the VerilatedVcdC trace object
+ * Returns: (none)
+*/
 void update_sim(Vscoreboard *dut, VerilatedVcdC *m_trace)
 {
     dut->eval();
@@ -16,16 +33,13 @@ void update_sim(Vscoreboard *dut, VerilatedVcdC *m_trace)
     sim_time++;
 }
 
-int get_rand()
-{
-    return rand() % 1000;
-}
-
 /*
-* Function to toggle clk to reach next similar clock edge
-* NOTE: Call function after relevant signals have been set
+ * Toggles clock and updates the sim time/trace
+ * Inputs:
+ *  dut       (Vscoreboard*) - pointer to an instance of the verilated model
+ *  m_trace   (VerilatedVcdC*) - pointer to the VerilatedVcdC trace object
+ * Returns: (none)
 */
-// update clk
 void toggle_pos_edge_clk(Vscoreboard *dut, VerilatedVcdC *m_trace)
 {
     dut->clk = 0;
@@ -34,7 +48,51 @@ void toggle_pos_edge_clk(Vscoreboard *dut, VerilatedVcdC *m_trace)
     update_sim(dut, m_trace);
 }
 
-int main(int argc, char** argv, char** env){
+/*
+ * Updates the scoreboard. Fake updating multiple indices at a time by 
+ * calling dut->eval() without incrementing sim time or calling m_trace->dump
+ * Inputs:
+ *  dut                 (Vscoreboard*) - pointer to an instance of the verilated model
+ *  m_trace             (VerilatedVcdC*) - pointer to the VerilatedVcdC trace object
+ *  in_idx              (int) - index of scoreboard to update
+ *  in_pc_vld           (int) - true if in_pc is valid
+ *  in_pc               (int) - pc of entry
+ *  in_opcode_vld       (int) - true if in_opcode is valid
+ *  in_opcode           (int) - opcode of entry
+ *  in_completed_vld    (int) - 1 to mark entry as completed, otherwise 0
+ *  in_invalidate_vld   (int) - 1 to invalidate entry, otherwise 0
+ * Returns: (none)
+*/
+void update_scrbrd(
+    Vscoreboard *dut, VerilatedVcdC *m_trace, 
+    int in_idx, 
+    int in_pc_vld, 
+    int in_pc, 
+    int in_opcode_vld, 
+    int in_opcode, 
+    int in_completed_vld, 
+    int in_invalidate_vld)
+{
+    dut->in_idx = in_idx;
+    dut->in_pc_vld = in_pc_vld;
+    dut->in_pc = in_pc;
+    dut->in_opcode_vld = in_opcode_vld;
+    dut->in_opcode = in_opcode;
+    dut->in_completed_vld = in_completed_vld;
+    dut->in_invalidate_vld = in_invalidate_vld;
+    dut->clk = 0;
+    dut->eval();
+    dut->clk = 1;
+    dut->eval();
+}
+
+/*
+ * Main driver to initialize the module/trace, trigger reset, and simulate
+ * updating the scoreboard.
+ * Inputs: (none)
+ * Returns: (none)
+*/
+int main(){
     srand(time(NULL));
     // initialize the top module
     Vscoreboard *dut = new Vscoreboard; 
@@ -53,18 +111,76 @@ int main(int argc, char** argv, char** env){
     toggle_pos_edge_clk(dut, m_trace);
 
     // add data
-    dut->in_idx = 0;
-    dut->in_pc_vld = 1;
-    dut->in_pc = 0xBEEF;
-    dut->in_opcode_vld = 1;
-    dut->in_opcode = 1;
-    dut->in_completed_vld = 0;
-    dut->in_invalidate_vld = 0;
+    update_scrbrd(dut, m_trace, 0, 1, 0x2EEF0, 1, 0x33, 0, 0);
+    update_scrbrd(dut, m_trace, 1, 1, 0x2EEF4, 1, 0x33, 0, 0);
     toggle_pos_edge_clk(dut, m_trace);
 
-    while(sim_time < MAX_TIME){
-        toggle_pos_edge_clk(dut, m_trace);
-    }
+    update_scrbrd(dut, m_trace, 2, 1, 0x2EEF8, 1, 0x3, 0, 0);
+    update_scrbrd(dut, m_trace, 3, 1, 0x2EEFC, 1, 0x3, 0, 0);
+    update_scrbrd(dut, m_trace, 4, 1, 0x2EF00, 1, 0x33, 0, 0);
+    toggle_pos_edge_clk(dut, m_trace);
+
+    update_scrbrd(dut, m_trace, 5, 1, 0x2EF04, 1, 0x23, 0, 0);
+    update_scrbrd(dut, m_trace, 6, 1, 0x2EF08, 1, 0x63, 0, 0);
+    update_scrbrd(dut, m_trace, 0, 0, 0, 0, 0, 1, 1);
+    update_scrbrd(dut, m_trace, 1, 0, 0, 0, 0, 1, 1);
+    toggle_pos_edge_clk(dut, m_trace);
+
+    update_scrbrd(dut, m_trace, 5, 1, 0x2EF04, 1, 0x23, 0, 0);
+    update_scrbrd(dut, m_trace, 6, 1, 0x2EF08, 1, 0x63, 0, 0);
+    toggle_pos_edge_clk(dut, m_trace);
+
+    update_scrbrd(dut, m_trace, 7, 1, 0x2EF0C, 1, 0x23, 0, 0);
+    update_scrbrd(dut, m_trace, 8, 1, 0x2EF10, 1, 0x63, 0, 0);
+    update_scrbrd(dut, m_trace, 9, 1, 0x2EF14, 1, 0x23, 0, 0);
+    update_scrbrd(dut, m_trace, 10, 1, 0x2EF18, 1, 0x63, 0, 0);
+    toggle_pos_edge_clk(dut, m_trace);
+
+    update_scrbrd(dut, m_trace, 11, 1, 0xBEEF8, 1, 0x3, 0, 0);
+    update_scrbrd(dut, m_trace, 12, 1, 0xBEEFC, 1, 0x3, 0, 0);
+    update_scrbrd(dut, m_trace, 13, 1, 0xBEF00, 1, 0x3, 0, 0);
+    update_scrbrd(dut, m_trace, 14, 1, 0xBEF04, 1, 0x3, 0, 0);
+    update_scrbrd(dut, m_trace, 6, 0, 0, 0, 0, 1, 0);
+    update_scrbrd(dut, m_trace, 7, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 8, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 9, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 10, 0, 0, 0, 0, 0, 1);
+    toggle_pos_edge_clk(dut, m_trace);
+
+    update_scrbrd(dut, m_trace, 15, 1, 0xBEF08, 1, 0x3, 0, 0);
+    update_scrbrd(dut, m_trace, 16, 1, 0xBEF0C, 1, 0x3, 0, 0);
+    update_scrbrd(dut, m_trace, 17, 1, 0xBEF10, 1, 0x3, 0, 0);
+    update_scrbrd(dut, m_trace, 18, 1, 0xBEF14, 1, 0x3, 0, 0);
+    toggle_pos_edge_clk(dut, m_trace);
+
+    update_scrbrd(dut, m_trace, 2, 0, 0, 0, 0, 1, 1);
+    update_scrbrd(dut, m_trace, 3, 0, 0, 0, 0, 1, 1);
+    update_scrbrd(dut, m_trace, 11, 0, 0, 0, 0, 1, 0);
+    update_scrbrd(dut, m_trace, 12, 0, 0, 0, 0, 1, 0);
+    update_scrbrd(dut, m_trace, 13, 0, 0, 0, 0, 1, 0);
+    update_scrbrd(dut, m_trace, 14, 0, 0, 0, 0, 1, 0);
+    toggle_pos_edge_clk(dut, m_trace);
+
+    update_scrbrd(dut, m_trace, 4, 0, 0, 0, 0, 1, 1);
+    update_scrbrd(dut, m_trace, 5, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 6, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 11, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 15, 0, 0, 0, 0, 1, 0);
+    update_scrbrd(dut, m_trace, 16, 0, 0, 0, 0, 1, 0);
+    update_scrbrd(dut, m_trace, 17, 0, 0, 0, 0, 1, 0);
+    update_scrbrd(dut, m_trace, 18, 0, 0, 0, 0, 1, 0);
+    toggle_pos_edge_clk(dut, m_trace);
+
+    update_scrbrd(dut, m_trace, 12, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 13, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 14, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 15, 0, 0, 0, 0, 0, 1);
+    toggle_pos_edge_clk(dut, m_trace);
+
+    update_scrbrd(dut, m_trace, 16, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 17, 0, 0, 0, 0, 0, 1);
+    update_scrbrd(dut, m_trace, 18, 0, 0, 0, 0, 0, 1);
+    toggle_pos_edge_clk(dut, m_trace);
 
     m_trace->close();
     delete dut;

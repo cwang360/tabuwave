@@ -1,6 +1,6 @@
 # tabuwave
 
-Tabular waveform viewer as a simple terminal user interface. Instead of using the traditional signal-to-time dimensions, Tabuwave uses an index-to-signal dimension at a specific time to make it easier to compare the same bit/groups of bits across multibit signals, such as a scoreboard or buffer of entries represented as masks or vectors. Currently only supports VCD files as input.
+Tabular waveform viewer as a simple terminal user interface. Instead of using the traditional signal-to-time dimensions, Tabuwave uses an index-to-signal dimension at a specific time to make it easier to compare the same bit/groups of bits across multibit signals, such as a scoreboard or buffer of entries represented as masks or arrays. Currently only supports VCD files as input.
 
 # Compilation
 
@@ -58,12 +58,25 @@ When run, Tabuwave will perform parsing and preprocessing and report the process
 | `:<#> + ENTER`         | jump to time `<#>`      |
 | `LEFT_ARROW` or `h`          | next timestamp     |
 | `RIGHT_ARROW` or `l`          | previous timestamp      |
-| `/<#> + ENTER`        | highlight line at index `<#>`      |
-| `DOWN_ARROW` or `k`           | highlight next line          |
-| `UP_ARROW` or `j`           | highlight previous line      |
+| `/<#> + ENTER`        | highlight and jump to line at index `<#>`      |
+| `DOWN_ARROW` or `k`           | highlight and jump to next line          |
+| `UP_ARROW` or `j`           | highlight and jump to previous line      |
 | `t`           | toggle table with/without horizontal lines      |
 | `Q`           | quit (return to menu)      |
 
+# Example
+
+Suppose you have designed a simple processor, and an assertion for your design related to verifying load behavior failed at t=19ps. You have a scoreboard-type data structure to keep track of instructions which is represented as arrays (`scrbrd_pc`, `scrbrd_opcode`) and masks (`scrbrd_completed`, `scrbrd_vld`), and to debug help the failure, you want to find the PCs for all the loads that haven't completed yet.
+
+In a traditional waveform viewer (GTKWave shown below), the unpacked arrays and multibit signals are laid out in vertical rows. It can be hard to visualize this data side-by-side and match the different properties at each index.
+
+![gtkwave](example/images/gtkwave.png)
+
+In Tabuwave, it's easy to find the entries you're looking for.
+
+![tabuwave](example/images/tabuwave.png)
+
+This is a trivial example, but the scoreboard could be hundreds of entries long, and this type of data structure could be part of a checker used for verification or even part of the design itself, such as a load/store buffer or reorder buffer.
 
 # Details
 
@@ -79,4 +92,3 @@ This is a custom project submission for ECE 4122, so below are what fulfill the 
     - See [Parser.cpp](src/Parser.cpp)
     - Multithreading is used to process vcd data for each `VcdVar` into its own interval_map in parallel.
     - Both hand-threading with `std::thread` (distributing work as evenly as possible among the available concurrent threads supported by hardware) and multithreading using `OpenMP` are implemented and can be switched/selected during compile time. See usage instructions.
-
