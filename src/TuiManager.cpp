@@ -1,24 +1,39 @@
+/**
+ * Author:          Cynthia Wang
+ * Date created:    11/08/2023
+ * Organization:    ECE 4122
+ *
+ * Description:
+ * Source file for TuiManager class and functions. See TuiManager.hpp for function descriptions.
+*/
+
 #include "TuiManager.hpp"
 
-TuiManager::TuiManager() {
-    initscr();    /* Start curses mode */
+TuiManager::TuiManager() 
+{
+    // ncurses window initialization
+    initscr();
     start_color();
     raw();
     noecho();
     keypad(stdscr, TRUE);
 
+    // set up ncurses colors
     init_pair(COLOR_ERROR, COLOR_WHITE, COLOR_RED);
     init_pair(COLOR_INFO, COLOR_BLUE, COLOR_WHITE);
     init_pair(COLOR_BOLD, COLOR_BLUE, COLOR_GREEN);
     
+    // initialize height and width
     getmaxyx(stdscr, height, width);
 }
 
-TuiManager::~TuiManager() {
+TuiManager::~TuiManager() 
+{
     endwin();
 }
 
-void TuiManager::display_bottom_line(attr_t attr, const char* str, ...) {
+void TuiManager::displayBottomLine(attr_t attr, const char* str, ...) 
+{
     attrset(attr);
     va_list args;
     move(height - 1, 0);
@@ -27,32 +42,52 @@ void TuiManager::display_bottom_line(attr_t attr, const char* str, ...) {
     va_end(args);
 }
 
-void TuiManager::clear_bottom_line() {
+void TuiManager::clearBottomLine() 
+{
     move(height - 2, 0);
     clrtoeol();
     move(height - 1, 0);
     clrtoeol();
 }
 
-void TuiManager::print_menu(WINDOW* w, VcdNode* top, unsigned int level) {
-    for (auto& menuItem : visibleMenuItems) {
-        if (cursorPos->node == menuItem.node) {
+void TuiManager::printMenu() 
+{
+    WINDOW *w;
+    w = newpad(300, width);
+    scrollok(w, TRUE);
+    for (auto& menuItem : visibleMenuItems) 
+    {
+        // set attribute
+        if (cursorPos->node == menuItem.node) 
             wattrset(w, DISPLAY_INFO);
-        } else if (selected.count(dynamic_cast<VcdPrimitive*>(menuItem.node))) {
+        else if (selected.count(dynamic_cast<VcdPrimitive*>(menuItem.node))) 
             wattrset(w, DISPLAY_SELECTED);
-        } else {
+        else 
             wattrset(w, A_NORMAL);
-        }
-        if (menuItem.node->getType() == VcdNode::SCOPE || menuItem.node->getType() == VcdNode::VEC_SCOPE) {
+
+        // print
+        if (menuItem.node->getType() == VcdNode::SCOPE || menuItem.node->getType() == VcdNode::ARR_SCOPE) 
             wprintw(w, "\n\r% *c %s", 3 * menuItem.level, menuItem.expanded ? 'v' : '>', menuItem.node->getName().c_str());
-        } else { // var
+        else // var
             wprintw(w, "\n\r% *c %s", 3 * menuItem.level, ' ', menuItem.node->getName().c_str());
-        }
     }
+
+    // determine vertical position of pad based on cursor position
+    int verticalPos = std::distance(visibleMenuItems.begin(), cursorPos);
+
+    if (verticalPos < ((height - 3) / 2))
+        verticalPos = 0;
+    else
+        verticalPos = verticalPos - ((height - 3) / 2);
+
+    prefresh(w, verticalPos, 0, 0, 0, height - 3, width);
 }
 
-void TuiManager::display_menu_mode(VcdScope* top) {
-    if (visibleMenuItems.empty()) {
+void TuiManager::displayMenuMode(VcdScope* top) 
+{
+    // initialize by expanding just the top scope
+    if (visibleMenuItems.empty()) 
+    {
         visibleMenuItems.emplace_back(MenuItem(top, 0));
         expand(visibleMenuItems.begin());
         cursorPos = visibleMenuItems.begin();
@@ -60,32 +95,28 @@ void TuiManager::display_menu_mode(VcdScope* top) {
 
     int c;
     bool err = false;
+    // control loop
     while(1)
     {
         c = 0;
-        WINDOW *w;
-        w = newpad (300, width);
-        scrollok(w, TRUE);
 
-        clear_bottom_line();
-        if (err) {
-            display_bottom_line(DISPLAY_ERROR, "Command not recognized.");
+        clearBottomLine();
+        if (err) 
+        {
+            displayBottomLine(DISPLAY_ERROR, "Command not recognized.");
             err = false;
-        } else {
-            display_bottom_line(DISPLAY_INFO, "%d selected. ENTER to continue.\n\r", selected.size());
+        } 
+        else 
+        {
+            displayBottomLine(DISPLAY_INFO, "%d selected. ENTER to continue.\n\r", selected.size());
         }
-        print_menu(w, top, 0);
         refresh();
-        int horizontalPos = std::distance(visibleMenuItems.begin(), cursorPos);
-        if (horizontalPos < ((height - 3) / 2)) {
-            horizontalPos = 0;
-        } else {
-            horizontalPos = horizontalPos - ((height - 3) / 2);
-        }
-        prefresh(w, horizontalPos, 0, 0, 0, height - 3, width);
+        printMenu();
         move(height - 2, 0);
+        attrset(A_NORMAL);
 
-        switch((c = getch())) {
+        switch((c = getch())) 
+        {
         case KEY_UP:
         case 'k':
             if (cursorPos == visibleMenuItems.begin()) 
@@ -101,24 +132,32 @@ void TuiManager::display_menu_mode(VcdScope* top) {
                 ++cursorPos;
             break;
         case ' ':
-            if ((cursorPos->node->getType() == VcdNode::SCOPE) || (cursorPos->node->getType() == VcdNode::VEC_SCOPE)) {
-                if (cursorPos->expanded) {
+            // only allow expand VcdScope or VcdArrScope
+            if ((cursorPos->node->getType() == VcdNode::SCOPE) 
+             || (cursorPos->node->getType() == VcdNode::ARR_SCOPE)) 
+            {
+                if (cursorPos->expanded)
                     collapse(cursorPos);
-                } else {
+                else
                     expand(cursorPos);
-                }
-            } else {
+            } 
+            else 
+            {
                 err = true;
             }
             break;
         case 's':
-            if ((cursorPos->node->getType() == VcdNode::VAR) || (cursorPos->node->getType() == VcdNode::VEC_SCOPE)) {
-                if (selected.count(dynamic_cast<VcdPrimitive*>(cursorPos->node))) {
+            // only allow select VcdVar or VcdArrScope
+            if ((cursorPos->node->getType() == VcdNode::VAR) 
+             || (cursorPos->node->getType() == VcdNode::ARR_SCOPE))
+            {
+                if (selected.count(dynamic_cast<VcdPrimitive*>(cursorPos->node)))
                     selected.erase(dynamic_cast<VcdPrimitive*>(cursorPos->node));
-                } else {
+                else
                     selected.insert(dynamic_cast<VcdPrimitive*>(cursorPos->node));
-                }
-            } else {
+            } 
+            else 
+            {
                 err = true;
             }
             break;
@@ -138,29 +177,33 @@ void TuiManager::display_menu_mode(VcdScope* top) {
     }
 }
 
-void TuiManager::display_table_mode() {
+void TuiManager::displayTableMode() 
+{
     int c;
-    bool lined = false;
-    uint64_t highlightIdx = -1;
-    uint64_t timestamp = 0;
+    lined = false;
+    highlightIdx = -1;
+    timestamp = 0;
     bool err = false;
 
+    // control loop
     while(1)
     {
         c = 0;
 
-        clear_bottom_line();
-        if (err) {
-            display_bottom_line(DISPLAY_ERROR, "Command not recognized.");
+        clearBottomLine();
+        if (err) 
+        {
+            displayBottomLine(DISPLAY_ERROR, "Command not recognized.");
             err = false;
         } 
         refresh();
-        print_table(selected, timestamp, lined, highlightIdx);
+        printTable();
         move(height - 2, 0);
         attrset(A_NORMAL);
 
         char str[20];
-        switch((c = getch())) {
+        switch((c = getch())) 
+        {
         case KEY_UP:
         case 'k':
             highlightIdx = (highlightIdx == 0) ? maxSelectedSize - 1 : highlightIdx - 1;
@@ -200,7 +243,8 @@ void TuiManager::display_table_mode() {
     }
 }
 
-void TuiManager::print_table(std::set<VcdPrimitive*> vars, uint64_t timestamp, bool lined, uint64_t highlight_idx) {
+void TuiManager::printTable() 
+{
     maxSelectedSize = 0;
     std::vector<size_t> colWidths;
     std::list<std::vector<std::string>> values;
@@ -209,32 +253,42 @@ void TuiManager::print_table(std::set<VcdPrimitive*> vars, uint64_t timestamp, b
     move(0, 0);
     printw("t = %llu \n\n\r", timestamp);
     printw(" index |");
-    for (auto& var : vars) {
+
+    // determine widths of columns and print table header
+    for (auto& var : selected) 
+    {
         size_t width = var->getWidth();
         colWidths.push_back(width);
         totalWidth += width + 2;
         printw("% *s |", width, var->getName().c_str());
         if (var->getSize() > maxSelectedSize) maxSelectedSize = var->getSize();
     }
-    for (auto& var : vars) {
+
+    // retrieve values for all vars
+    for (auto& var : selected) {
         values.emplace_back(var->getValueAt(timestamp, maxSelectedSize));
     }
+
     WINDOW *w;
     int padHeight = maxSelectedSize * 2 + 3;
-    w = newpad (padHeight, width);
+    w = newpad(padHeight, width);
     scrollok(w, TRUE);
 
     if (lined) printw("\n\r%s", std::string(totalWidth, '=').c_str());
     printw("\n\r");
-    for (size_t i = 0; i < maxSelectedSize; i++) {
+
+    // print table rows
+    for (size_t i = 0; i < maxSelectedSize; i++) 
+    {
         std::string hl = "";
         wattrset(w, DISPLAY_BOLD | A_NORMAL);
-        if (i == highlight_idx) wattrset(w, DISPLAY_INFO);
+        if (i == highlightIdx) wattrset(w, DISPLAY_INFO);
         wprintw(w, "% 6d |", i);
         size_t col = 0;
         wattrset(w, A_NORMAL);
-        if (i == highlight_idx) wattrset(w, DISPLAY_INFO);
-        for (auto& val : values) {
+        if (i == highlightIdx) wattrset(w, DISPLAY_INFO);
+        for (auto& val : values) 
+        {
             wprintw(w, "% *s |", colWidths.at(col), val.at(i).c_str());
             col++;
         }
@@ -242,33 +296,40 @@ void TuiManager::print_table(std::set<VcdPrimitive*> vars, uint64_t timestamp, b
         if (lined) wprintw(w, "\n\r%s", std::string(totalWidth, '-').c_str());
         wprintw(w, "\n\r");
     }
-    int horizontalPos = (highlight_idx == (uint64_t)-1) ? 0 : highlight_idx + (lined * highlight_idx + 1);
-    if (horizontalPos < ((height - 3) / 2)) {
-        horizontalPos = 0;
-    } else {
-        horizontalPos = horizontalPos - ((height - 3) / 2);
-    }
-    prefresh(w, horizontalPos, 0, 4, 0, height - 3, width);
+
+    // determine vertical position of pad based on cursor selection
+    int verticalPos = (highlightIdx == (uint64_t)-1) ? 0 : highlightIdx + (lined * highlightIdx + 1);
+    if (verticalPos < ((height - 3) / 2)) 
+        verticalPos = 0;
+    else 
+        verticalPos = verticalPos - ((height - 3) / 2);
+    prefresh(w, verticalPos, 0, 4, 0, height - 3, width);
 }
 
-void TuiManager::expand(std::list<TuiManager::MenuItem>::iterator scope_itr) {
+void TuiManager::expand(std::list<TuiManager::MenuItem>::iterator scope_itr) 
+{
     assert(!scope_itr->expanded);
-    assert(scope_itr->node->getType() == VcdNode::SCOPE || scope_itr->node->getType() == VcdNode::VEC_SCOPE);
+    assert(scope_itr->node->getType() == VcdNode::SCOPE 
+        || scope_itr->node->getType() == VcdNode::ARR_SCOPE);
     auto curr_itr = std::next(scope_itr);
-    for (auto& child : dynamic_cast<VcdScope*>(scope_itr->node)->getChildren()) {
+    for (auto& child : dynamic_cast<VcdScope*>(scope_itr->node)->getChildren()) 
+    {
         visibleMenuItems.insert(curr_itr, MenuItem(child.second, scope_itr->level + 1));
     }
     scope_itr->expanded = true;
     scope_itr->lastChild = curr_itr;
 }
 
-void TuiManager::collapse(std::list<TuiManager::MenuItem>::iterator scope_itr) {
+void TuiManager::collapse(std::list<TuiManager::MenuItem>::iterator scope_itr) 
+{
     assert(scope_itr->expanded);
-    assert(scope_itr->node->getType() == VcdNode::SCOPE || scope_itr->node->getType() == VcdNode::VEC_SCOPE);
+    assert(scope_itr->node->getType() == VcdNode::SCOPE 
+        || scope_itr->node->getType() == VcdNode::ARR_SCOPE);
     visibleMenuItems.erase(std::next(scope_itr), scope_itr->lastChild);
     scope_itr->expanded = false;
 }
 
-void TuiManager::set_max_time(size_t time) {
+void TuiManager::setMaxTime(uint64_t time) 
+{
     maxTime = time;
 }

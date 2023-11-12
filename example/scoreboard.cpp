@@ -1,6 +1,6 @@
-/*
+/**
  * Author:          Cynthia Wang
- * Last modified:   11/11/2023
+ * Date created:    11/10/2023
  * Organization:    ECE 4122
  *
  * Description:
@@ -19,13 +19,12 @@
 vluint64_t sim_time = 0;
 int total_errors = 0;
 
-/*
- * Updates the simulator's time and the waveform trace
- * Inputs:
- *  dut       (Vscoreboard*) - pointer to an instance of the verilated model
- *  m_trace   (VerilatedVcdC*) - pointer to the VerilatedVcdC trace object
- * Returns: (none)
-*/
+/**
+ * @brief Updates the simulator's time and the waveform trace
+ * 
+ * @param dut (Vscoreboard*) pointer to an instance of the verilated model
+ * @param m_trace (VerilatedVcdC*) pointer to the VerilatedVcdC trace object
+ */
 void update_sim(Vscoreboard *dut, VerilatedVcdC *m_trace)
 {
     dut->eval();
@@ -33,13 +32,12 @@ void update_sim(Vscoreboard *dut, VerilatedVcdC *m_trace)
     sim_time++;
 }
 
-/*
- * Toggles clock and updates the sim time/trace
- * Inputs:
- *  dut       (Vscoreboard*) - pointer to an instance of the verilated model
- *  m_trace   (VerilatedVcdC*) - pointer to the VerilatedVcdC trace object
- * Returns: (none)
-*/
+/**
+ * @brief Toggles clock and updates the sim time/trace
+ * 
+ * @param dut (Vscoreboard*) - pointer to an instance of the verilated model
+ * @param m_trace (VerilatedVcdC*) - pointer to the VerilatedVcdC trace object
+ */
 void toggle_pos_edge_clk(Vscoreboard *dut, VerilatedVcdC *m_trace)
 {
     dut->clk = 0;
@@ -48,21 +46,20 @@ void toggle_pos_edge_clk(Vscoreboard *dut, VerilatedVcdC *m_trace)
     update_sim(dut, m_trace);
 }
 
-/*
- * Updates the scoreboard. Fake updating multiple indices at a time by 
+/**
+ * @brief Updates the scoreboard. Fake updating multiple indices at a time by 
  * calling dut->eval() without incrementing sim time or calling m_trace->dump
- * Inputs:
- *  dut                 (Vscoreboard*) - pointer to an instance of the verilated model
- *  m_trace             (VerilatedVcdC*) - pointer to the VerilatedVcdC trace object
- *  in_idx              (int) - index of scoreboard to update
- *  in_pc_vld           (int) - true if in_pc is valid
- *  in_pc               (int) - pc of entry
- *  in_opcode_vld       (int) - true if in_opcode is valid
- *  in_opcode           (int) - opcode of entry
- *  in_completed_vld    (int) - 1 to mark entry as completed, otherwise 0
- *  in_invalidate_vld   (int) - 1 to invalidate entry, otherwise 0
- * Returns: (none)
-*/
+ * 
+ * @param dut (Vscoreboard*) - pointer to an instance of the verilated model
+ * @param m_trace (VerilatedVcdC*) - pointer to the VerilatedVcdC trace object
+ * @param in_idx (int) - index of scoreboard to update
+ * @param in_pc_vld (int) - true if in_pc is valid
+ * @param in_pc (int) - pc of entry
+ * @param in_opcode_vld (int) - true if in_opcode is valid
+ * @param in_opcode (int) - opcode of entry
+ * @param in_completed_vld (int) - 1 to mark entry as completed, otherwise 0
+ * @param in_invalidate_vld (int) - 1 to invalidate entry, otherwise 0
+ */
 void update_scrbrd(
     Vscoreboard *dut, VerilatedVcdC *m_trace, 
     int in_idx, 
@@ -86,13 +83,14 @@ void update_scrbrd(
     dut->eval();
 }
 
-/*
- * Main driver to initialize the module/trace, trigger reset, and simulate
+/**
+ * @brief Main driver to initialize the module/trace, trigger reset, and simulate
  * updating the scoreboard.
- * Inputs: (none)
- * Returns: (none)
-*/
-int main(){
+ * 
+ * @return 0 on success 
+ */
+int main()
+{
     srand(time(NULL));
     // initialize the top module
     Vscoreboard *dut = new Vscoreboard; 

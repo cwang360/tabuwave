@@ -1,3 +1,12 @@
+/**
+ * Author:          Cynthia Wang
+ * Date created:    10/27/2023
+ * Organization:    ECE 4122
+ *
+ * Description:
+ * Source file for main driver code for Tabuwave
+*/
+
 #include <unistd.h>
 #include <iostream>
 #include <iomanip>
@@ -7,21 +16,36 @@
 #include "Vcd.hpp"
 #include "TuiManager.hpp"
 
-void print_help() {
+/**
+ * @brief helper function to print usage text for Tabuwave
+ * 
+ */
+void print_help() 
+{
     std::cout << "tabuwave [OPTIONS]\n";
     std::cout << "  -h\t\tThis helpful output\n";
     std::cout << "  -f F\t\tPath to waveform file\n";
 }
 
-
-int main(int argc, char **argv) {  
+/**
+ * @brief main/driver function for Tabuwave that parses command
+ * line arguments, parses the VCD file, and launches the TUI
+ * 
+ * @param argc argument count
+ * @param argv array of pointers to arrays of character objects
+ * @return int 0 on success
+ */
+int main(int argc, char **argv) 
+{  
     // get command line arguments
     int opt;
-    std::string waveform_file;
-    while (-1 != (opt = getopt(argc, argv, "f:h"))) {
-        switch (opt) {
+    std::string waveformFile;
+    while (-1 != (opt = getopt(argc, argv, "f:h"))) 
+    {
+        switch (opt) 
+        {
             case 'f':
-                waveform_file = optarg;
+                waveformFile = optarg;
                 break;
             case 'h':
                 /* Fall through */
@@ -31,7 +55,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (waveform_file.empty()) {
+    if (waveformFile.empty()) 
+    {
         std::cerr << "No waveform file provided\n";
         print_help();
         return 1;
@@ -39,21 +64,22 @@ int main(int argc, char **argv) {
     
     TuiManager tui;
 
-    Parser parser(waveform_file);
+    Parser parser(waveformFile);
     parser.parse();
 
-    tui.set_max_time(parser.getMaxTime());
-    tui.display_bottom_line(DISPLAY_INFO, "ENTER to continue\n\r");
+    tui.setMaxTime(parser.getMaxTime());
+    tui.displayBottomLine(DISPLAY_INFO, "ENTER to continue\n\r");
 
     refresh();
     while(getch() != '\n');
     erase(); 
 
-    while (1) {
-        tui.display_menu_mode(parser.getTop());
+    while (1) 
+    {
+        tui.displayMenuMode(parser.getTop());
         erase();
         echo();
-        tui.display_table_mode();
+        tui.displayTableMode();
         erase();
         noecho();
     }

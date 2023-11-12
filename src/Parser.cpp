@@ -1,3 +1,12 @@
+/**
+ * Author:          Cynthia Wang
+ * Date created:    10/27/2023
+ * Organization:    ECE 4122
+ *
+ * Description:
+ * Source file for Parser class and functions. See Parser.hpp for function descriptions.
+*/
+
 #include "Parser.hpp"
 
 #include <unistd.h>
@@ -14,7 +23,8 @@
 #include <omp.h>
 #endif
 
-void Parser::parse() {
+void Parser::parse() 
+{
     // Determine the number of threads that can run concurrently
     uint64_t numThreads = std::thread::hardware_concurrency();
     printw("Your computer supports %llu concurrent threads.\n\r", numThreads);
@@ -25,7 +35,7 @@ void Parser::parse() {
 
     std::ifstream infile(filename);
     std::string line;
-    VcdScope* curr_scope = nullptr;
+    VcdScope* currScope = nullptr;
     std::string token;
 
     std::string version;
@@ -35,62 +45,76 @@ void Parser::parse() {
 
     startMeasureTime("Parsing...");
 
-    while (std::getline(infile, line)) {
+    // read in line by line
+    while (std::getline(infile, line)) 
+    {
         boost::algorithm::trim(line);
         if (line.empty()) continue;
 
         std::istringstream ss(line);
 
-        while (ss >> token) {
-            if (token.at(0) == '$') {
-                curr_state = getParseState(token);
-                if (curr_state == PARSE_UPSCOPE) {
-                    curr_scope = curr_scope->parent;
+        // parse each line token by token (space-separated)
+        while (ss >> token) 
+        {
+            if (token.at(0) == '$') 
+            {
+                currState = getParseState(token);
+                if (currState == PARSE_UPSCOPE) 
+                {
+                    currScope = currScope->parent;
                     break;
                 }
-            } else {
-                switch (curr_state) {
-                    case PARSE_VERSION: {
+            } 
+            else 
+            {
+                switch (currState) 
+                {
+                    case PARSE_VERSION: 
+                    {
                         version += ' ' + token;
                         break;
                     }
-                    case PARSE_DATE: {
+                    case PARSE_DATE: 
+                    {
                         date += ' ' + token;
                         break;
                     }
-                    case PARSE_TIMESCALE: {
+                    case PARSE_TIMESCALE: 
+                    {
                         timescale += ' ' + token;
                         break;
                     }
-                    case PARSE_SCOPE: {
-                        VcdScope* next_scope = new VcdScope();
-                        next_scope->parent = curr_scope;
-                        scopes.emplace_back(next_scope);
+                    case PARSE_SCOPE: 
+                    {
+                        VcdScope* nextScope = new VcdScope();
+                        nextScope->parent = currScope;
+                        scopes.emplace_back(nextScope);
                         ss >> token;
-                        next_scope->name = token;
-                        if (!curr_scope) // top level
+                        nextScope->name = token;
+                        if (!currScope) // top level
                         {
-                            if (!top_scope) 
+                            if (!topScope) 
                             {
-                                top_scope = next_scope;
-                                curr_scope = next_scope;
+                                topScope = nextScope;
+                                currScope = nextScope;
                             } 
                             else 
                             { // visited before
-                                curr_scope = top_scope;
+                                currScope = topScope;
                             }
                             
                         }   
-                        else if (!curr_scope->children.count(next_scope->name)) // non-top level, haven't visited before
+                        else if (!currScope->children.count(nextScope->name)) // non-top level, haven't visited before
                         {
-                            curr_scope->children[next_scope->name] = next_scope;
-                            curr_scope = next_scope;
+                            currScope->children[nextScope->name] = nextScope;
+                            currScope = nextScope;
                         }
                         else // top level, have visited before
-                            curr_scope = dynamic_cast<VcdScope*>(curr_scope->children[next_scope->name]);
+                            currScope = dynamic_cast<VcdScope*>(currScope->children[nextScope->name]);
                         break;
                     }
-                    case PARSE_VAR: {
+                    case PARSE_VAR: 
+                    {
                         std::string type = token;
                         ss >> token;
                         uint64_t size = stoi(token);
@@ -100,50 +124,63 @@ void Parser::parse() {
                         std::string name = token;
                         ss >> token;
                         std::string dimensions = token;
-                        if (!var_map.count(hash)) {
+                        if (!varMap.count(hash)) 
+                        {
                             VcdVar* curr_var = new VcdVar();
-                            curr_var->parent = curr_scope;
+                            curr_var->parent = currScope;
                             curr_var->size = size;
                             curr_var->hash = hash;
                             curr_var->name = name;
                             curr_var->dimensions = dimensions;
-                            var_map[hash] = curr_var;
-                            var_hashes.push_back(hash);
+                            varMap[hash] = curr_var;
+                            varHashes.push_back(hash);
                         }
-                        if (std::regex_match(name, unpackedVecRegex)) { 
-                            // unpacked vector, extract name to use as scope
-                            std::string scope_name = name.substr(0, name.find("["));
-                            VcdScope* vec_scope;
-                            if (vec_scopes.count(scope_name)) {
-                                vec_scope = vec_scopes[scope_name];
-                            } else {
-                                vec_scope = new VcdVecScope();
-                                vec_scope->name = scope_name;
-                                vec_scope->parent = curr_scope;
-                                vec_scope->type = VcdNode::VEC_SCOPE;
-                                curr_scope->children[scope_name] = vec_scope;
-                                scopes.emplace_back(vec_scope);
-                                vec_scopes[scope_name] = vec_scope;
+                        if (std::regex_match(name, unpackedVecRegex)) 
+                        { 
+                            // unpacked array, extract name to use as scope
+                            std::string scopeName = name.substr(0, name.find("["));
+                            VcdScope* arrScope;
+                            if (arrScopes.count(scopeName)) 
+                            {
+                                arrScope = arrScopes[scopeName];
                             }
-                            var_map[hash]->parent = vec_scope;
-                            vec_scope->children[var_map[hash]->name] = var_map[hash];
-                        } else {
-                            curr_scope->children[var_map[hash]->name] = var_map[hash];
+                            else 
+                            {
+                                arrScope = new VcdArrScope();
+                                arrScope->name = scopeName;
+                                arrScope->parent = currScope;
+                                arrScope->type = VcdNode::ARR_SCOPE;
+                                currScope->children[scopeName] = arrScope;
+                                scopes.emplace_back(arrScope);
+                                arrScopes[scopeName] = arrScope;
+                            }
+                            varMap[hash]->parent = arrScope;
+                            arrScope->children[varMap[hash]->name] = varMap[hash];
+                        } 
+                        else 
+                        {
+                            currScope->children[varMap[hash]->name] = varMap[hash];
                         }
                         break;
                     }
-                    case PARSE_VALUES: {
-                        if (token.at(0) == '#') {
-                            curr_time = stoi(token.substr(1, token.size()));
-                        } else if (token.at(0) == 'b') {
+                    case PARSE_VALUES: 
+                    {
+                        if (token.at(0) == '#') 
+                        {
+                            currTime = stoi(token.substr(1, token.size()));
+                        } 
+                        else if (token.at(0) == 'b') 
+                        {
                             std::string value = token;
                             ss >> token;
-                            var_map[token]->vcd_values.emplace_back(
-                                std::pair(curr_time, value));
-                        } else {
+                            varMap[token]->vcdValues.emplace_back(
+                                std::pair(currTime, value));
+                        } 
+                        else 
+                        {
                             std::string hash = token.substr(1, token.size());
-                            var_map[hash]->vcd_values.emplace_back(
-                                std::pair(curr_time, token.substr(0, 1)));
+                            varMap[hash]->vcdValues.emplace_back(
+                                std::pair(currTime, token.substr(0, 1)));
                         }
                         break;
                     }
@@ -153,7 +190,7 @@ void Parser::parse() {
             }
         }
     }
-    maxTime = curr_time;
+    maxTime = currTime;
 
     endMeasureTime("Parse Time");
     
@@ -163,7 +200,7 @@ void Parser::parse() {
     constructValueIntervals();
 #else
     std::list<std::thread> threads;
-    uint64_t numVars = var_hashes.size();
+    uint64_t numVars = varHashes.size();
     uint64_t varsPerThread = floor((numVars) / (double) (numThreads - 1)); // min # vars each thread should have
     uint64_t remainder = numVars % (numThreads - 1);
     uint64_t i = 0;
@@ -199,61 +236,69 @@ void Parser::parse() {
         version.c_str(),
         date.c_str(),
         timescale.c_str(),
-        top_scope->name.c_str()
+        topScope->name.c_str()
     );
     refresh();
 
 }
 
 #ifdef USE_OMP
-void Parser::constructValueIntervals() {
-    constructValueIntervals(0, var_hashes.size());
+void Parser::constructValueIntervals() 
+{
+    constructValueIntervals(0, varHashes.size());
 }
 #endif
 
-void Parser::constructValueIntervals(uint64_t startIdx, uint64_t endIdx) {
+void Parser::constructValueIntervals(uint64_t startIdx, uint64_t endIdx) 
+{
 #ifdef USE_OMP
 #pragma omp parallel for
 #endif
-    for (uint64_t i = startIdx; i < endIdx; i++) {
-        std::string hash = var_hashes[i];
-        VcdVar* var = var_map[hash];
-        auto it = var->vcd_values.begin();
-        uint64_t prev_timestamp = it->first;
-        std::string prev_value = it->second;
+    for (uint64_t i = startIdx; i < endIdx; i++) 
+    {
+        std::string hash = varHashes[i];
+        VcdVar* var = varMap[hash];
+        auto it = var->vcdValues.begin();
+        uint64_t prevTimestamp = it->first;
+        std::string prevValue = it->second;
         ++it;
-        for (; it != var->vcd_values.end(); ++it) {
-            var->interval_values +=
+        for (; it != var->vcdValues.end(); ++it) 
+        {
+            var->intervalValues +=
                 std::make_pair(
                     boost::icl::interval<uint64_t>::right_open(
-                        prev_timestamp, it->first
+                        prevTimestamp, it->first
                     ),
-                    prev_value);
-            prev_timestamp = it->first;
-            prev_value = it->second;
+                    prevValue);
+            prevTimestamp = it->first;
+            prevValue = it->second;
         }
-        var->interval_values +=
+        var->intervalValues +=
             std::make_pair(
                 boost::icl::interval<uint64_t>::right_open(
-                    prev_timestamp, maxTime + 1
+                    prevTimestamp, maxTime + 1
                 ),       
-                prev_value);
+                prevValue);
     }
 }
 
-Parser::~Parser() {
+Parser::~Parser() 
+{
     // delete scopes
-    for (auto& scope : scopes) {
+    for (auto& scope : scopes)
+    {
         delete scope;
     }
     // delete vars
-    for (auto& x : var_map) {
+    for (auto& x : varMap) 
+    {
         delete x.second;
     }
 }
 
-inline Parser::State Parser::getParseState(std::string token) {
-    if (curr_state == PARSE_VALUES) return PARSE_VALUES;
+inline Parser::State Parser::getParseState(std::string token) 
+{
+    if (currState == PARSE_VALUES) return PARSE_VALUES;
     if (token == "$version") return PARSE_VERSION;
     if (token == "$date") return PARSE_DATE;
     if (token == "$timescale") return PARSE_TIMESCALE;
@@ -261,48 +306,56 @@ inline Parser::State Parser::getParseState(std::string token) {
     if (token == "$upscope") return PARSE_UPSCOPE;
     if (token == "$var") return PARSE_VAR;
     if (token == "$enddefinitions") return PARSE_ENDDEFINITIONS;
-    if (token == "$end") {
-        if (curr_state == PARSE_ENDDEFINITIONS) return PARSE_VALUES;
+    if (token == "$end") 
+    {
+        if (currState == PARSE_ENDDEFINITIONS) return PARSE_VALUES;
         return PARSE_NONE;
     }
     return PARSE_ERR;
 }
 
-VcdScope* Parser::getTop() {
-    return top_scope;
+VcdScope* Parser::getTop() 
+{
+    return topScope;
 }
 
-VcdVar* Parser::getVcdVar(std::string hierarchicalName, VcdScope* scope) {
+VcdVar* Parser::getVcdVar(std::string hierarchicalName, VcdScope* scope) 
+{
     size_t pos = hierarchicalName.find('.');
     std::string token;
-    VcdScope* curr_scope = scope;
+    VcdScope* currScope = scope;
     token = hierarchicalName.substr(0, pos);
-    assert(curr_scope->name == token);
+    assert(currScope->name == token);
     hierarchicalName.erase(0, pos + 1);
-    while ((pos = hierarchicalName.find('.')) != std::string::npos) {
+    while ((pos = hierarchicalName.find('.')) != std::string::npos) 
+    {
         token = hierarchicalName.substr(0, pos);
-        curr_scope = dynamic_cast<VcdScope*>(curr_scope->children[token]);
+        currScope = dynamic_cast<VcdScope*>(currScope->children[token]);
         hierarchicalName.erase(0, pos + 1);
     }
-    return dynamic_cast<VcdVar*>(curr_scope->children[hierarchicalName]);
+    return dynamic_cast<VcdVar*>(currScope->children[hierarchicalName]);
 }
 
-VcdVar* Parser::getVcdVar(std::string hierarchicalName) {
-    return getVcdVar(hierarchicalName, top_scope);
+VcdVar* Parser::getVcdVar(std::string hierarchicalName) 
+{
+    return getVcdVar(hierarchicalName, topScope);
 }
 
-void Parser::startMeasureTime(const char* message) {
+void Parser::startMeasureTime(const char* message) 
+{
     startTime = std::chrono::high_resolution_clock::now();
     printw("%s\n\r", message);
     refresh();
 }
 
-void Parser::endMeasureTime(const char* desc) {
+void Parser::endMeasureTime(const char* desc) 
+{
     auto elapsed = std::chrono::high_resolution_clock::now() - startTime;
     printw("%s: %llu us\n\r", desc, std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count());
     refresh();
 }
 
-size_t Parser::getMaxTime() {
+size_t Parser::getMaxTime() 
+{
     return maxTime;
 }
