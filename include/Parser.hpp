@@ -66,7 +66,11 @@ class Parser
 
     /**
      * @brief Constructs value intervals for all `VcdVar`s in under `top_scope`.
-     * startIdx and endIdx are used to distribute work when using std::thread
+     * startIdx and endIdx are used to distribute work when using std::thread.
+     * 
+     * VCD files store data as value change records. This is parsed and stored 
+     * into interval trees to be able to quickly query the value at any time within 
+     * the simulation. `boost::icl::interval_map` is used for robustness.
      * 
      * @param startIdx (uint64_t) start index of var_hashes this call is 
      * responsible for.

@@ -50,7 +50,7 @@ class TuiManager
     // for menu
     std::list<MenuItem> visibleMenuItems;
     std::list<MenuItem>::iterator cursorPos;
-    std::set<VcdPrimitive*> selected;
+    std::map<std::string, VcdPrimitive*> selected;
     size_t maxSelectedSize;
     uint64_t maxTime;
 
@@ -58,6 +58,7 @@ class TuiManager
     uint64_t timestamp;
     bool lined;
     uint64_t highlightIdx;
+    std::map<std::string, std::set<std::string>> query;
 
     /**
      * @brief Creates a scrollable pad for the table, sets it up and 
@@ -90,6 +91,14 @@ class TuiManager
      * from visibleMenuItems to collapse.
      */
     void collapse(std::list<MenuItem>::iterator scope);
+
+    /**
+     * @brief Parses query_str into the query map of key->value format.
+     * 
+     * @param query_str (std::string) query string from user input
+     * @return true on success, false on error
+     */
+    bool parseQuery(std::string query_str);
 
    public:
     /**

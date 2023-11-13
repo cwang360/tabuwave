@@ -58,9 +58,10 @@ When run, Tabuwave will perform parsing and preprocessing and report the process
 | `:<#> + ENTER`         | jump to time `<#>`      |
 | `LEFT_ARROW` or `h`          | next timestamp     |
 | `RIGHT_ARROW` or `l`          | previous timestamp      |
-| `/<#> + ENTER`        | highlight and jump to line at index `<#>`      |
-| `DOWN_ARROW` or `k`           | highlight and jump to next line          |
-| `UP_ARROW` or `j`           | highlight and jump to previous line      |
+| `/<#> + ENTER`        | jump to line at index `<#>`      |
+| `DOWN_ARROW` or `k`           | jump to next line          |
+| `UP_ARROW` or `j`           | jump to previous line      |
+| `?<query_str> + ENTER`           | highlight all rows satisfying the conditions in `<query_str>`. `<query_str>` is formatted like a URL query string, but it can also specify multiple values for a signal with an or. For example: `?scrbrd_vld=1&scrbrd_opcode=h03\|h23` to query for all rows/indices where `scrbrd_vld` is 1 and `scrbrd_opcode` is either `h03` or `h23`. `&` can only be used between different signals, and `\|` can only be used for different values within the same signal     |
 | `t`           | toggle table with/without horizontal lines      |
 | `Q`           | quit (return to menu)      |
 
@@ -68,15 +69,19 @@ When run, Tabuwave will perform parsing and preprocessing and report the process
 
 When would you use a tabular waveform viewer? 
 
-Suppose you have designed a simple processor, and an assertion for your design related to verifying load behavior failed at t=19ps. You have a scoreboard-type data structure to keep track of instructions which is represented as arrays (`scrbrd_pc`, `scrbrd_opcode`) and masks (`scrbrd_completed`, `scrbrd_vld`), and to debug help the failure, you want to find the PCs for all the loads that haven't completed yet.
+Suppose you have designed a simple processor, and an assertion for your design related to verifying LSU behavior failed at t=19ps. You have a scoreboard-type data structure to keep track of instructions which is represented as arrays (`scrbrd_pc`, `scrbrd_opcode`) and masks (`scrbrd_completed`, `scrbrd_vld`), and to debug help the failure, you want to find the PCs for all the loads and stores that haven't completed yet.
 
 In a traditional waveform viewer (GTKWave shown below), the unpacked arrays and multibit signals are laid out in vertical rows. It can be hard to visualize this data side-by-side and match the different properties at each index.
 
 ![gtkwave](example/images/gtkwave.png)
 
-In Tabuwave, it's easy to find the entries you're looking for.
+In Tabuwave, it's easy to visually find the entries you're looking for.
 
 ![tabuwave](example/images/tabuwave.png)
+
+You can use the query `?scrbrd_vld=1&scrbrd_opcode=h03|h23&scrbrd_completed=0` to highlight the rows of interest.
+
+![tabuwave](example/images/tabuwave_highlight.png)
 
 This is a trivial example, but the scoreboard could be hundreds of entries long, and this type of data structure could be part of a checker used for verification or even part of the design itself, such as a load/store buffer or reorder buffer.
 
@@ -85,13 +90,8 @@ This is a trivial example, but the scoreboard could be hundreds of entries long,
 This is a custom project submission for ECE 4122, so below are what fulfill the grading requirements.
 
 - Classes
-    - `Parser` is a class for parsing a vcd file into manipulatable data structures. It's not the most robust VCD parser out there, but it's simple, independent of other parser/lexical analysis tools, and gets the job done.
-    - `VcdNode` is a base class to represent a node in the tree-like data structure that the VCD file is parsed into. 
-        - `VcdScope` is a derived class to represent a "scope" which can have any number of children that are instances of `VcdNode`.
-        - `VcdVar` is a derived class to represent a variable type from the VCD file. `VcdVar` cannot have children but has some additional members, such as time-value information. VCD files store data as value change records. This is parsed and then stored into interval trees to be able to quickly query the value at any time within the simulation. `boost::icl::interval_map` is used for robustness.
-    - `TuiManager` is a wrapper class for `ncurses` functions and keeps state for Tabuwave's purposes to make it easier and more readable to manipulate the TUI.
+    - See header files under [include](include/) for details on the `Parser` class, `TuiManager` class, and classes representing parsed nodes from a Vcd file.
 - Multithreading
     - See [Parser.cpp](src/Parser.cpp)
     - Multithreading is used to process vcd data for each `VcdVar` into its own interval_map in parallel.
     - Both hand-threading with `std::thread` (distributing work as evenly as possible among the available concurrent threads supported by hardware) and multithreading using `OpenMP` are implemented and can be switched/selected during compile time. See usage instructions.
-

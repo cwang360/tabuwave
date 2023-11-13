@@ -8,6 +8,7 @@
 */
 
 #include "TuiManager.hpp"
+#include <boost/algorithm/string.hpp>
 
 TuiManager::TuiManager() 
 {
@@ -60,7 +61,7 @@ void TuiManager::printMenu()
         // set attribute
         if (cursorPos->node == menuItem.node) 
             wattrset(w, DISPLAY_INFO);
-        else if (selected.count(dynamic_cast<VcdPrimitive*>(menuItem.node))) 
+        else if (selected.count(menuItem.node->getName())) 
             wattrset(w, DISPLAY_SELECTED);
         else 
             wattrset(w, A_NORMAL);
@@ -151,10 +152,10 @@ void TuiManager::displayMenuMode(VcdScope* top)
             if ((cursorPos->node->getType() == VcdNode::VAR) 
              || (cursorPos->node->getType() == VcdNode::ARR_SCOPE))
             {
-                if (selected.count(dynamic_cast<VcdPrimitive*>(cursorPos->node)))
-                    selected.erase(dynamic_cast<VcdPrimitive*>(cursorPos->node));
+                if (selected.count(cursorPos->node->getName()))
+                    selected.erase(cursorPos->node->getName());
                 else
-                    selected.insert(dynamic_cast<VcdPrimitive*>(cursorPos->node));
+                    selected[cursorPos->node->getName()] = dynamic_cast<VcdPrimitive*>(cursorPos->node);
             } 
             else 
             {
@@ -201,7 +202,7 @@ void TuiManager::displayTableMode()
         move(height - 2, 0);
         attrset(A_NORMAL);
 
-        char str[20];
+        char str[50];
         switch((c = getch())) 
         {
         case KEY_UP:
@@ -233,6 +234,10 @@ void TuiManager::displayTableMode()
             sscanf(str, "%llu", &highlightIdx);
             if (highlightIdx > maxSelectedSize - 1) highlightIdx = -1;
             break;
+        case '?':
+            getstr(str);
+            err = !parseQuery(std::string(str));
+            break;
         case 'Q':
             return;
         default:
@@ -243,11 +248,38 @@ void TuiManager::displayTableMode()
     }
 }
 
+bool TuiManager::parseQuery(std::string query_str) 
+{
+    query.clear();
+    std::vector<std::string> result;
+    boost::split(result, query_str, boost::is_any_of("&"));
+    for (auto& q : result) 
+    {
+        auto sep = q.find('=');
+        if (sep == std::string::npos) goto err;
+
+        std::string key = q.substr(0, sep);
+        if (!selected.count(key)) goto err;
+        std::string val_str = q.substr(sep + 1, q.size());
+        if (key.size() == 0 || val_str.size() == 0) goto err;
+
+        std::set<std::string> vals;
+        boost::split(vals, val_str, boost::is_any_of("|"));
+        query[key] = vals;
+    }
+
+    return true;
+
+    err:
+        query.clear();
+        return false;
+}
+
 void TuiManager::printTable() 
 {
     maxSelectedSize = 0;
     std::vector<size_t> colWidths;
-    std::list<std::vector<std::string>> values;
+    std::map<std::string, std::vector<std::string>> values;
     size_t totalWidth = 8;
     attrset(DISPLAY_BOLD);
     move(0, 0);
@@ -257,16 +289,17 @@ void TuiManager::printTable()
     // determine widths of columns and print table header
     for (auto& var : selected) 
     {
-        size_t width = var->getWidth();
+        size_t width = var.second->getWidth();
         colWidths.push_back(width);
         totalWidth += width + 2;
-        printw("% *s |", width, var->getName().c_str());
-        if (var->getSize() > maxSelectedSize) maxSelectedSize = var->getSize();
+        printw("% *s |", width, var.first.c_str());
+        if (var.second->getSize() > maxSelectedSize) maxSelectedSize = var.second->getSize();
     }
 
     // retrieve values for all vars
-    for (auto& var : selected) {
-        values.emplace_back(var->getValueAt(timestamp, maxSelectedSize));
+    for (auto& var : selected) 
+    {
+        values[var.first] = var.second->getValueAt(timestamp, maxSelectedSize);
     }
 
     WINDOW *w;
@@ -280,16 +313,27 @@ void TuiManager::printTable()
     // print table rows
     for (size_t i = 0; i < maxSelectedSize; i++) 
     {
+        bool query_match = (query.size() > 0);
+        for (auto& q : query) 
+        {
+            if (!q.second.count(values[q.first].at(i))) 
+            {
+                query_match = false;
+                break;
+            }
+        }
         std::string hl = "";
         wattrset(w, DISPLAY_BOLD | A_NORMAL);
+        if (query_match) wattrset(w, DISPLAY_SELECTED);
         if (i == highlightIdx) wattrset(w, DISPLAY_INFO);
         wprintw(w, "% 6d |", i);
         size_t col = 0;
         wattrset(w, A_NORMAL);
+        if (query_match) wattrset(w, DISPLAY_SELECTED);
         if (i == highlightIdx) wattrset(w, DISPLAY_INFO);
         for (auto& val : values) 
         {
-            wprintw(w, "% *s |", colWidths.at(col), val.at(i).c_str());
+            wprintw(w, "% *s |", colWidths.at(col), val.second.at(i).c_str());
             col++;
         }
         
