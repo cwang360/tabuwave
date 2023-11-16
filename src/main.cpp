@@ -68,6 +68,7 @@ int main(int argc, char **argv)
     parser.parse();
 
     tui.setMaxTime(parser.getMaxTime());
+    tui.setTimescale(parser.getTimescale());
     tui.displayBottomLine(DISPLAY_INFO, "ENTER to continue\n\r");
 
     refresh();

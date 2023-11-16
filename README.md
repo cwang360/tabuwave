@@ -58,12 +58,14 @@ When run, Tabuwave will perform parsing and preprocessing and report the process
 | `:<#> + ENTER`         | jump to time `<#>`      |
 | `LEFT_ARROW` or `h`          | next timestamp     |
 | `RIGHT_ARROW` or `l`          | previous timestamp      |
-| `/<#> + ENTER`        | jump to line at index `<#>`      |
-| `DOWN_ARROW` or `k`           | jump to next line          |
-| `UP_ARROW` or `j`           | jump to previous line      |
-| `?<query_str> + ENTER`           | highlight all rows satisfying the conditions in `<query_str>`. `<query_str>` is formatted like a URL query string, but it can also specify multiple values for a signal with an or. For example: `?scrbrd_vld=1&scrbrd_opcode=h03\|h23` to query for all rows/indices where `scrbrd_vld` is 1 and `scrbrd_opcode` is either `h03` or `h23`. `&` can only be used between different signals, and `\|` can only be used for different values within the same signal     |
+| `/<#> + ENTER`        | move cursor to line at index `<#>`      |
+| `DOWN_ARROW` or `k`           | move cursor to next line          |
+| `UP_ARROW` or `j`           | move cursor to previous line      |
+| `?<query_str> + ENTER`           | highlight all rows satisfying the conditions in `<query_str>`     |
 | `t`           | toggle table with/without horizontal lines      |
 | `Q`           | quit (return to menu)      |
+
+`<query_str>` is formatted like a URL query string, but it can also specify multiple values for a signal with an or. For example: `?scrbrd_vld=1&scrbrd_opcode=h03|h23` to query for all rows/indices where `scrbrd_vld` is 1 and `scrbrd_opcode` is either `h03` or `h23`. `&` can only be used between different signals, and `|` can only be used for different values within the same signal
 
 # Example
 
@@ -89,7 +91,7 @@ This is a trivial example, but the scoreboard could be hundreds of entries long,
 
 This is a custom project submission for ECE 4122, so below are what fulfill the grading requirements.
 
-- Classes
+- Classes and polymorphism
     - See header files under [include](include/) for details on the `Parser` class, `TuiManager` class, and classes representing parsed nodes from a Vcd file.
 - Multithreading
     - See [Parser.cpp](src/Parser.cpp)

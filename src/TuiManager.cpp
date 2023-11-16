@@ -9,6 +9,7 @@
 
 #include "TuiManager.hpp"
 #include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
 
 TuiManager::TuiManager() 
 {
@@ -227,6 +228,7 @@ void TuiManager::displayTableMode()
         case ':':
             getstr(str);
             sscanf(str, "%llu", &timestamp);
+            timestamp = timestamp / timescaleMultiplier;
             if (timestamp > maxTime) timestamp = maxTime;
             break;
         case '/':
@@ -283,7 +285,7 @@ void TuiManager::printTable()
     size_t totalWidth = 8;
     attrset(DISPLAY_BOLD);
     move(0, 0);
-    printw("t = %llu \n\n\r", timestamp);
+    printw("t = %llu %s \n\n\r", timestamp * timescaleMultiplier, timescaleUnit.c_str());
     printw(" index |");
 
     // determine widths of columns and print table header
@@ -376,4 +378,18 @@ void TuiManager::collapse(std::list<TuiManager::MenuItem>::iterator scope_itr)
 void TuiManager::setMaxTime(uint64_t time) 
 {
     maxTime = time;
+}
+
+void TuiManager::setTimescale(std::string timescale) 
+{
+    timescaleMultiplier = stoull(boost::regex_replace(
+        timescale,
+        boost::regex("[^0-9]*([0-9]+).*"),
+        std::string("\\1")
+    ));
+    timescaleUnit = boost::regex_replace(
+        timescale,
+        boost::regex("[^a-zA-Z]*([a-zA-Z]+).*"),
+        std::string("\\1")
+    );
 }

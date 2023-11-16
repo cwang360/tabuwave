@@ -45,6 +45,9 @@ class Parser
     };
 
     std::string filename;
+    std::string version;
+    std::string date;
+    std::string timescale;
     VcdScope* topScope;
     State currState;
     size_t currTime;
@@ -142,8 +145,30 @@ class Parser
      * @return pointer to VcdVar object.
      */
     VcdVar* getVcdVar(std::string hierarchicalName, VcdScope* scope);
+
+    /**
+     * @brief Get the VcdVar from the given `hierarchicalName` starting at
+     * the top scope.
+     * 
+     * @param hierarchicalName (std::string) full hierarchical name of the 
+     * signal starting from the name of top scope
+     * @return pointer to VcdVar object. 
+     */
     VcdVar* getVcdVar(std::string hierarchicalName);
+
+    /**
+     * @brief Get the end time of the simulation
+     * 
+     * @return size_t end time
+     */
     size_t getMaxTime();
+
+    /**
+     * @brief Get the parsed timescale
+     * 
+     * @return std::string timescale
+     */
+    std::string getTimescale();
 };
 
 #endif

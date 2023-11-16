@@ -38,9 +38,6 @@ void Parser::parse()
     VcdScope* currScope = nullptr;
     std::string token;
 
-    std::string version;
-    std::string date;
-    std::string timescale;
     std::regex unpackedVecRegex("^.+\\[[0-9]+\\]$");
 
     startMeasureTime("Parsing...");
@@ -191,6 +188,9 @@ void Parser::parse()
         }
     }
     maxTime = currTime;
+    if (!version.empty()) version = version.substr(1, version.size());
+    if (!timescale.empty()) timescale = timescale.substr(1, timescale.size());
+    if (!date.empty()) date = date.substr(1, date.size());
 
     endMeasureTime("Parse Time");
     
@@ -358,4 +358,9 @@ void Parser::endMeasureTime(const char* desc)
 size_t Parser::getMaxTime() 
 {
     return maxTime;
+}
+
+std::string Parser::getTimescale() 
+{
+    return timescale;
 }

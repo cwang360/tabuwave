@@ -35,6 +35,9 @@ class TuiManager
     size_t height;
     size_t width;
 
+    size_t timescaleMultiplier;
+    std::string timescaleUnit;
+
     /**
      * @brief Data structure for an item in the menu.
      */
@@ -149,6 +152,14 @@ class TuiManager
      * @param time (uint64_t) max time
      */
     void setMaxTime(uint64_t time);
+
+    /**
+     * @brief Set the timescale 
+     * 
+     * @param timescale as a string as int followed by unit abbreviation
+     * (e.g. 1ps)
+     */
+    void setTimescale(std::string timescale);
 };
 
 #endif
