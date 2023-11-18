@@ -103,7 +103,7 @@ size_t VcdArrScope::getWidth()
 const std::vector<std::string> VcdArrScope::getValueAt(uint64_t time, size_t size)
 {
     std::vector<std::string> value_vec;
-    int i = 0;
+    size_t i = 0;
     for (; i < children.size(); i++) 
     {
         std::ostringstream stringStream;

@@ -75,7 +75,7 @@ void TuiManager::printMenu()
     }
 
     // determine vertical position of pad based on cursor position
-    int verticalPos = std::distance(visibleMenuItems.begin(), cursorPos);
+    size_t verticalPos = std::distance(visibleMenuItems.begin(), cursorPos);
 
     if (verticalPos < ((height - 3) / 2))
         verticalPos = 0;
@@ -344,7 +344,7 @@ void TuiManager::printTable()
     }
 
     // determine vertical position of pad based on cursor selection
-    int verticalPos = (highlightIdx == (uint64_t)-1) ? 0 : highlightIdx + (lined * highlightIdx + 1);
+    size_t verticalPos = (highlightIdx == (uint64_t)-1) ? 0 : highlightIdx + (lined * highlightIdx + 1);
     if (verticalPos < ((height - 3) / 2)) 
         verticalPos = 0;
     else 
